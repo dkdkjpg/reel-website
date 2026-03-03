@@ -1,16 +1,16 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Moj Style Reel</title>
+<title>Moj Style Website</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
 body{
 margin:0;
 background:black;
+color:white;
 font-family:sans-serif;
 overflow-y:scroll;
 scroll-snap-type:y mandatory;
-color:white;
 }
 
 .reel{
@@ -28,30 +28,45 @@ object-fit:cover;
 .icons{
 position:absolute;
 right:10px;
-bottom:100px;
+bottom:120px;
 text-align:center;
+font-size:18px;
 }
 
 .icons div{
 margin:20px 0;
 cursor:pointer;
-font-size:18px;
 }
 
-.follow{
+.follow-section{
 position:absolute;
 bottom:20px;
 left:10px;
 }
 
 button{
-padding:5px 10px;
+padding:5px 12px;
 border:none;
 border-radius:5px;
 cursor:pointer;
 }
 
-.lang{
+.comment-box{
+position:absolute;
+bottom:0;
+left:0;
+width:100%;
+background:rgba(0,0,0,0.9);
+display:none;
+padding:10px;
+}
+
+.comment-box input{
+width:80%;
+padding:5px;
+}
+
+.lang-select{
 position:fixed;
 top:10px;
 right:10px;
@@ -61,7 +76,7 @@ z-index:1000;
 </head>
 <body>
 
-<div class="lang">
+<div class="lang-select">
 <select onchange="changeLang(this.value)">
 <option value="hi">Hindi</option>
 <option value="bh">Bhojpuri</option>
@@ -69,19 +84,47 @@ z-index:1000;
 </select>
 </div>
 
+<!-- REEL 1 -->
 <div class="reel">
 <video src="https://www.w3schools.com/html/mov_bbb.mp4" autoplay muted loop playsinline></video>
 
 <div class="icons">
 <div onclick="like(this)">🤍 <span>0</span></div>
-<div>💬 <span>15</span></div>
-<div>🔗 <span>5</span></div>
+<div onclick="toggleComment(this)">💬 <span>0</span></div>
+<div onclick="share()">🔗 Share</div>
 </div>
 
-<div class="follow">
-<h3>@username</h3>
+<div class="follow-section">
+<h3>@creator1</h3>
 <button onclick="follow(this)">Follow</button>
-<p id="text">मस्त वीडियो 🔥</p>
+<p class="desc">मस्त वीडियो 🔥</p>
+</div>
+
+<div class="comment-box">
+<input type="text" placeholder="Write comment..." onkeydown="addComment(event,this)">
+<div class="comment-list"></div>
+</div>
+</div>
+
+<!-- REEL 2 -->
+<div class="reel">
+<video src="https://www.w3schools.com/html/movie.mp4" autoplay muted loop playsinline></video>
+
+<div class="icons">
+<div onclick="like(this)">🤍 <span>0</span></div>
+<div onclick="toggleComment(this)">💬 <span>0</span></div>
+<div onclick="share()">🔗 Share</div>
+</div>
+
+<div class="follow-section">
+<h3>@creator2</h3>
+<button onclick="follow(this)">Follow</button>
+<p class="desc">धमाकेदार वीडियो 😎</p>
+</div>
+
+<div class="comment-box">
+<input type="text" placeholder="Write comment..." onkeydown="addComment(event,this)">
+<div class="comment-list"></div>
 </div>
 </div>
 
@@ -113,17 +156,37 @@ btn.style.background="red";
 }
 }
 
+function toggleComment(el){
+let reel = el.closest(".reel");
+let box = reel.querySelector(".comment-box");
+box.style.display = box.style.display=="block" ? "none":"block";
+}
+
+function addComment(e,input){
+if(e.key==="Enter" && input.value!=""){
+let list = input.nextElementSibling;
+let div = document.createElement("div");
+div.innerText=input.value;
+list.appendChild(div);
+
+let icon = input.closest(".reel").querySelector(".icons span");
+icon.innerText=parseInt(icon.innerText)+1;
+
+input.value="";
+}
+}
+
+function share(){
+navigator.clipboard.writeText(window.location.href);
+alert("Link Copied 🔗");
+}
+
 function changeLang(lang){
-let text=document.getElementById("text");
-if(lang=="hi"){
-text.innerText="मस्त वीडियो 🔥";
-}
-if(lang=="bh"){
-text.innerText="बहुत बढ़िया वीडियो बा 🔥";
-}
-if(lang=="pa"){
-text.innerText="वधिया वीडियो 🔥";
-}
+document.querySelectorAll(".desc").forEach(el=>{
+if(lang=="hi") el.innerText="मस्त वीडियो 🔥";
+if(lang=="bh") el.innerText="बहुत बढ़िया वीडियो बा 🔥";
+if(lang=="pa") el.innerText="वधिया वीडियो 🔥";
+});
 }
 </script>
 
