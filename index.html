@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Moj Style Website</title>
+<title>Moj Clone Website</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
 body{
@@ -12,183 +12,152 @@ font-family:sans-serif;
 overflow-y:scroll;
 scroll-snap-type:y mandatory;
 }
-
 .reel{
 height:100vh;
 position:relative;
 scroll-snap-align:start;
 }
-
 video{
 width:100%;
 height:100%;
 object-fit:cover;
 }
-
 .icons{
 position:absolute;
 right:10px;
 bottom:120px;
 text-align:center;
-font-size:18px;
 }
-
 .icons div{
 margin:20px 0;
 cursor:pointer;
+font-size:18px;
 }
-
-.follow-section{
-position:absolute;
-bottom:20px;
+.topbar{
+position:fixed;
+top:10px;
 left:10px;
+z-index:1000;
 }
-
 button{
-padding:5px 12px;
+padding:6px 10px;
 border:none;
 border-radius:5px;
 cursor:pointer;
 }
-
-.comment-box{
-position:absolute;
-bottom:0;
-left:0;
-width:100%;
-background:rgba(0,0,0,0.9);
-display:none;
-padding:10px;
-}
-
-.comment-box input{
-width:80%;
-padding:5px;
-}
-
-.lang-select{
+.upload-box{
 position:fixed;
-top:10px;
-right:10px;
-z-index:1000;
+top:50px;
+left:10px;
+background:#111;
+padding:10px;
+display:none;
 }
 </style>
 </head>
 <body>
 
-<div class="lang-select">
-<select onchange="changeLang(this.value)">
-<option value="hi">Hindi</option>
-<option value="bh">Bhojpuri</option>
-<option value="pa">Punjabi</option>
-</select>
+<div class="topbar">
+<button onclick="login()">Login</button>
+<button onclick="logout()">Logout</button>
+<button onclick="toggleUpload()">Upload</button>
 </div>
 
-<!-- REEL 1 -->
-<div class="reel">
-<video src="https://www.w3schools.com/html/mov_bbb.mp4" autoplay muted loop playsinline></video>
+<div class="upload-box" id="uploadBox">
+<input type="file" id="videoFile"><br><br>
+<input type="text" id="description" placeholder="Description"><br><br>
+<button onclick="uploadVideo()">Submit</button>
+</div>
 
+<div id="feed"></div>
+
+<script type="module">
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getAuth, GoogleAuthProvider, signInWithPopup, signOut } 
+from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { getFirestore, collection, addDoc, getDocs, updateDoc, doc } 
+from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getStorage, ref, uploadBytes, getDownloadURL } 
+from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
+
+/* 🔥 PASTE YOUR FIREBASE CONFIG BELOW */
+const firebaseConfig = {
+  apiKey: "YOUR_KEY",
+  authDomain: "YOUR_DOMAIN",
+  projectId: "YOUR_ID",
+  storageBucket: "YOUR_BUCKET",
+  messagingSenderId: "YOUR_MSG",
+  appId: "YOUR_APP_ID"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+const storage = getStorage(app);
+
+window.login = async function(){
+const provider = new GoogleAuthProvider();
+await signInWithPopup(auth, provider);
+alert("Login Success");
+}
+
+window.logout = async function(){
+await signOut(auth);
+alert("Logout Success");
+}
+
+window.toggleUpload = function(){
+document.getElementById("uploadBox").style.display =
+document.getElementById("uploadBox").style.display=="block"?"none":"block";
+}
+
+window.uploadVideo = async function(){
+const file = document.getElementById("videoFile").files[0];
+const desc = document.getElementById("description").value;
+if(!file) return alert("Select video");
+
+const storageRef = ref(storage, "videos/"+file.name);
+await uploadBytes(storageRef, file);
+const url = await getDownloadURL(storageRef);
+
+await addDoc(collection(db,"videos"),{
+url:url,
+desc:desc,
+likes:0
+});
+
+alert("Uploaded!");
+location.reload();
+}
+
+async function loadVideos(){
+const querySnapshot = await getDocs(collection(db,"videos"));
+querySnapshot.forEach((docu)=>{
+const data = docu.data();
+const div = document.createElement("div");
+div.className="reel";
+div.innerHTML=`
+<video src="${data.url}" autoplay muted loop playsinline></video>
 <div class="icons">
-<div onclick="like(this)">🤍 <span>0</span></div>
-<div onclick="toggleComment(this)">💬 <span>0</span></div>
-<div onclick="share()">🔗 Share</div>
+<div onclick="likeVideo('${docu.id}',this)">❤️ ${data.likes}</div>
 </div>
-
-<div class="follow-section">
-<h3>@creator1</h3>
-<button onclick="follow(this)">Follow</button>
-<p class="desc">मस्त वीडियो 🔥</p>
+<div style="position:absolute;bottom:20px;left:10px;">
+<p>${data.desc}</p>
 </div>
-
-<div class="comment-box">
-<input type="text" placeholder="Write comment..." onkeydown="addComment(event,this)">
-<div class="comment-list"></div>
-</div>
-</div>
-
-<!-- REEL 2 -->
-<div class="reel">
-<video src="https://www.w3schools.com/html/movie.mp4" autoplay muted loop playsinline></video>
-
-<div class="icons">
-<div onclick="like(this)">🤍 <span>0</span></div>
-<div onclick="toggleComment(this)">💬 <span>0</span></div>
-<div onclick="share()">🔗 Share</div>
-</div>
-
-<div class="follow-section">
-<h3>@creator2</h3>
-<button onclick="follow(this)">Follow</button>
-<p class="desc">धमाकेदार वीडियो 😎</p>
-</div>
-
-<div class="comment-box">
-<input type="text" placeholder="Write comment..." onkeydown="addComment(event,this)">
-<div class="comment-list"></div>
-</div>
-</div>
-
-<script>
-function like(el){
-let span = el.querySelector("span");
-let count = parseInt(span.innerText);
-
-if(el.classList.contains("liked")){
-el.classList.remove("liked");
-el.style.color="white";
-span.innerText = count - 1;
-el.innerHTML = "🤍 <span>"+span.innerText+"</span>";
-}else{
-el.classList.add("liked");
-el.style.color="red";
-span.innerText = count + 1;
-el.innerHTML = "❤️ <span>"+span.innerText+"</span>";
-}
-}
-
-function follow(btn){
-if(btn.innerText=="Follow"){
-btn.innerText="Following";
-btn.style.background="gray";
-}else{
-btn.innerText="Follow";
-btn.style.background="red";
-}
-}
-
-function toggleComment(el){
-let reel = el.closest(".reel");
-let box = reel.querySelector(".comment-box");
-box.style.display = box.style.display=="block" ? "none":"block";
-}
-
-function addComment(e,input){
-if(e.key==="Enter" && input.value!=""){
-let list = input.nextElementSibling;
-let div = document.createElement("div");
-div.innerText=input.value;
-list.appendChild(div);
-
-let icon = input.closest(".reel").querySelector(".icons span");
-icon.innerText=parseInt(icon.innerText)+1;
-
-input.value="";
-}
-}
-
-function share(){
-navigator.clipboard.writeText(window.location.href);
-alert("Link Copied 🔗");
-}
-
-function changeLang(lang){
-document.querySelectorAll(".desc").forEach(el=>{
-if(lang=="hi") el.innerText="मस्त वीडियो 🔥";
-if(lang=="bh") el.innerText="बहुत बढ़िया वीडियो बा 🔥";
-if(lang=="pa") el.innerText="वधिया वीडियो 🔥";
+`;
+document.getElementById("feed").appendChild(div);
 });
 }
-</script>
+loadVideos();
 
+window.likeVideo = async function(id,el){
+let count = parseInt(el.innerText.split(" ")[1]);
+count++;
+el.innerText="❤️ "+count;
+await updateDoc(doc(db,"videos",id),{likes:count});
+}
+
+</script>
 </body>
 </html>
