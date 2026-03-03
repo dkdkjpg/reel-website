@@ -1,163 +1,527 @@
 <!DOCTYPE html>
-<html>
+<html lang="hi">
 <head>
-<title>Moj Clone Website</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<style>
-body{
-margin:0;
-background:black;
-color:white;
-font-family:sans-serif;
-overflow-y:scroll;
-scroll-snap-type:y mandatory;
-}
-.reel{
-height:100vh;
-position:relative;
-scroll-snap-align:start;
-}
-video{
-width:100%;
-height:100%;
-object-fit:cover;
-}
-.icons{
-position:absolute;
-right:10px;
-bottom:120px;
-text-align:center;
-}
-.icons div{
-margin:20px 0;
-cursor:pointer;
-font-size:18px;
-}
-.topbar{
-position:fixed;
-top:10px;
-left:10px;
-z-index:1000;
-}
-button{
-padding:6px 10px;
-border:none;
-border-radius:5px;
-cursor:pointer;
-}
-.upload-box{
-position:fixed;
-top:50px;
-left:10px;
-background:#111;
-padding:10px;
-display:none;
-}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Moj Clone - शॉर्ट वीडियो ऐप (सभी भाषाएँ)</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            background: #000; 
+            color: #fff; 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow-x: hidden;
+        }
+        
+        /* Header */
+        .header { 
+            position: fixed; 
+            top: 0; 
+            width: 100%; 
+            background: rgba(0,0,0,0.9); 
+            padding: 10px 20px; 
+            z-index: 1000;
+            backdrop-filter: blur(10px);
+        }
+        .logo { font-size: 24px; font-weight: bold; color: #ff0000; }
+        .nav { display: flex; gap: 20px; justify-content: center; align-items: center; }
+        .nav-btn { background: none; border: none; color: #fff; font-size: 18px; cursor: pointer; padding: 10px; }
+        .nav-btn.active { color: #ff0000; }
+        
+        /* Main Container */
+        .container { padding-top: 70px; padding-bottom: 80px; }
+        
+        /* Video Feed */
+        .video-feed { max-width: 500px; margin: 0 auto; position: relative; }
+        .video-container { position: relative; height: 100vh; max-height: 700px; overflow: hidden; }
+        .video-player { 
+            width: 100%; height: 100%; object-fit: cover; 
+            border-radius: 15px; margin-bottom: 20px;
+        }
+        
+        /* Video Info */
+        .video-info { position: absolute; bottom: 120px; left: 20px; right: 20px; }
+        .username { font-weight: bold; font-size: 16px; margin-bottom: 5px; }
+        .description { font-size: 14px; opacity: 0.9; }
+        .hashtags { font-size: 12px; color: #ff0000; margin-top: 5px; }
+        
+        /* Action Buttons */
+        .action-bar { 
+            position: absolute; bottom: 20px; left: 20px; right: 20px;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .action-group { display: flex; flex-direction: column; gap: 20px; align-items: center; }
+        .action-btn { 
+            background: rgba(255,255,255,0.1); 
+            border: none; 
+            color: #fff; 
+            font-size: 24px; 
+            padding: 15px; 
+            border-radius: 50%; 
+            cursor: pointer; 
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+        .action-btn:hover { background: rgba(255,0,0,0.3); transform: scale(1.1); }
+        .action-btn.liked { color: #ff0000; }
+        .count { font-size: 14px; margin-top: 5px; opacity: 0.8; }
+        
+        /* Comments Section */
+        .comments-section { 
+            position: absolute; bottom: 90px; left: 20px; right: 20px;
+            max-height: 200px; overflow-y: auto; background: rgba(0,0,0,0.8);
+            padding: 15px; border-radius: 15px; backdrop-filter: blur(10px);
+        }
+        .comment { display: flex; gap: 10px; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid #333; }
+        .comment-avatar { width: 30px; height: 30px; background: #333; border-radius: 50%; }
+        .comment-text { flex: 1; }
+        .comment-user { font-weight: bold; font-size: 14px; }
+        .comment-content { font-size: 13px; opacity: 0.9; }
+        
+        /* Bottom Navigation */
+        .bottom-nav { 
+            position: fixed; bottom: 0; width: 100%; 
+            background: rgba(0,0,0,0.95); padding: 10px 0;
+            display: flex; justify-content: space-around; z-index: 1000;
+            backdrop-filter: blur(10px);
+        }
+        .nav-item { text-align: center; cursor: pointer; padding: 10px; }
+        .nav-item.active { color: #ff0000; }
+        
+        /* Language Selector */
+        .lang-selector { position: absolute; top: 80px; right: 20px; z-index: 1001; }
+        select { background: #333; color: #fff; border: 1px solid #555; padding: 8px; border-radius: 5px; }
+        
+        /* Profile Modal */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 2000; }
+        .modal-content { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); background: #111; padding: 30px; border-radius: 15px; max-width: 400px; width: 90%; }
+        .close { position: absolute; right: 15px; top: 15px; font-size: 24px; cursor: pointer; }
+        
+        /* Upload Page */
+        .upload-page { max-width: 500px; margin: 50px auto; text-align: center; display: none; }
+        .upload-area { border: 3px dashed #ff0000; padding: 60px 20px; border-radius: 15px; margin: 30px 0; cursor: pointer; }
+        .upload-area.dragover { background: rgba(255,0,0,0.1); }
+        
+        /* Responsive */
+        @media (max-width: 480px) {
+            .video-feed { max-width: 100%; }
+            .action-bar { bottom: 10px; }
+        }
+        
+        /* Animations */
+        @keyframes slideIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .slide-in { animation: slideIn 0.3s ease; }
+    </style>
 </head>
 <body>
+    <!-- Header -->
+    <div class="header">
+        <div class="logo">🔥 Moj Clone</div>
+        <div class="nav">
+            <button class="nav-btn active" onclick="showPage('feed')" id="feed-btn">🏠 Home</button>
+            <button class="nav-btn" onclick="showPage('upload')" id="upload-btn">📤 Upload</button>
+            <button class="nav-btn" onclick="showPage('profile')" id="profile-btn">👤 Profile</button>
+        </div>
+    </div>
+    
+    <!-- Language Selector -->
+    <div class="lang-selector">
+        <select id="language" onchange="changeLanguage()">
+            <option value="hi">हिंदी</option>
+            <option value="en">English</option>
+            <option value="bn">বাংলা</option>
+            <option value="ta">தமிழ்</option>
+            <option value="te">తెలుగు</option>
+            <option value="mr">मराठी</option>
+            <option value="gu">ગુજરાતી</option>
+            <option value="kn">ಕನ್ನಡ</option>
+            <option value="ml">മലയാളം</option>
+            <option value="pa">ਪੰਜਾਬੀ</option>
+        </select>
+    </div>
 
-<div class="topbar">
-<button onclick="login()">Login</button>
-<button onclick="logout()">Logout</button>
-<button onclick="toggleUpload()">Upload</button>
-</div>
+    <!-- Main Container -->
+    <div class="container">
+        <!-- Video Feed Page -->
+        <div id="feed-page" class="video-feed">
+            <div class="video-container slide-in">
+                <video class="video-player" id="main-video" loop muted>
+                    <source src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4" type="video/mp4">
+                </video>
+                <div class="video-info">
+                    <div class="username" id="username">dinesh_kumar_official</div>
+                    <div class="description" id="description">पटना से प्यार! 🔥 #Bihar #Patna</div>
+                    <div class="hashtags">#motivation #dance #comedy #trending</div>
+                </div>
+                
+                <!-- Action Bar -->
+                <div class="action-bar">
+                    <div class="action-group">
+                        <button class="action-btn" onclick="toggleLike()" id="like-btn">❤️</button>
+                        <div class="count" id="like-count">1.2K</div>
+                    </div>
+                    <div class="action-group">
+                        <button class="action-btn" onclick="toggleComment()">💬</button>
+                        <div class="count" id="comment-count">245</div>
+                    </div>
+                    <div class="action-group">
+                        <button class="action-btn" onclick="shareVideo()">↗️</button>
+                        <div class="count">Share</div>
+                    </div>
+                    <div class="action-group">
+                        <button class="action-btn" onclick="toggleFollow()">👤</button>
+                        <div class="count" id="follow-count">Follow</div>
+                    </div>
+                </div>
+                
+                <!-- Comments Section -->
+                <div class="comments-section" id="comments-section" style="display: none;">
+                    <div class="comment">
+                        <div class="comment-avatar"></div>
+                        <div class="comment-text">
+                            <div class="comment-user">rahul_verma</div>
+                            <div class="comment-content">बहुत अच्छा भाई! 🔥🔥</div>
+                        </div>
+                    </div>
+                    <div class="comment">
+                        <div class="comment-avatar"></div>
+                        <div class="comment-text">
+                            <div class="comment-user">priya_singh</div>
+                            <div class="comment-content">Super dance moves! 👏</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-<div class="upload-box" id="uploadBox">
-<input type="file" id="videoFile"><br><br>
-<input type="text" id="description" placeholder="Description"><br><br>
-<button onclick="uploadVideo()">Submit</button>
-</div>
+        <!-- Upload Page -->
+        <div id="upload-page" class="upload-page">
+            <h2 id="upload-title">वीडियो अपलोड करें</h2>
+            <div class="upload-area" onclick="document.getElementById('video-file').click()">
+                <div>📱 वीडियो चुनें या यहाँ ड्रैग करें</div>
+                <input type="file" id="video-file" accept="video/*" style="display: none;">
+                <input type="text" id="video-desc" placeholder="कैप्शन लिखें..." style="width: 100%; margin-top: 20px; padding: 15px; background: #333; color: #fff; border: none; border-radius: 10px;">
+                <div style="margin-top: 20px;">
+                    <button onclick="uploadVideo()" style="background: #ff0000; color: #fff; border: none; padding: 15px 30px; border-radius: 25px; font-size: 16px; cursor: pointer;">🚀 अपलोड करें</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
-<div id="feed"></div>
+    <!-- Bottom Navigation -->
+    <div class="bottom-nav">
+        <div class="nav-item active" onclick="showPage('feed')">
+            <div>🏠</div>
+            <div id="nav-home">होम</div>
+        </div>
+        <div class="nav-item" onclick="showPage('discover')">
+            <div>🔍</div>
+            <div id="nav-discover">डिस्कवर</div>
+        </div>
+        <div class="nav-item" onclick="showPage('upload')">
+            <div>➕</div>
+            <div id="nav-upload">अपलोड</div>
+        </div>
+        <div class="nav-item" onclick="showPage('inbox')">
+            <div>📩</div>
+            <div id="nav-inbox">इनबॉक्स</div>
+        </div>
+        <div class="nav-item" onclick="showPage('profile')">
+            <div>👤</div>
+            <div id="nav-profile">प्रोफाइल</div>
+        </div>
+    </div>
 
-<script type="module">
+    <!-- Profile Modal -->
+    <div id="profile-modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <div style="text-align: center; margin-bottom: 30px;">
+                <div style="width: 100px; height: 100px; background: linear-gradient(45deg, #ff0000, #ff4444); border-radius: 50%; margin: 0 auto 20px;"></div>
+                <h2 id="profile-name">Dinesh Kumar</h2>
+                <p id="profile-bio">@dinesh_kumar_official | पटना, बिहार</p>
+            </div>
+            <div style="display: flex; justify-content: space-around; margin-top: 20px;">
+                <div><strong id="profile-videos">25</strong><br>वीडियो</div>
+                <div><strong id="profile-followers">1.2K</strong><br>फॉलोअर्स</div>
+                <div><strong id="profile-following">156</strong><br>फॉलोइंग</div>
+            </div>
+            <button onclick="editProfile()" style="width: 100%; background: #ff0000; color: #fff; border: none; padding: 15px; border-radius: 10px; margin-top: 20px; font-size: 16px;">प्रोफाइल एडिट करें</button>
+        </div>
+    </div>
 
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getAuth, GoogleAuthProvider, signInWithPopup, signOut } 
-from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-import { getFirestore, collection, addDoc, getDocs, updateDoc, doc } 
-from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-import { getStorage, ref, uploadBytes, getDownloadURL } 
-from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
+    <script>
+        // Multi-language support
+        const translations = {
+            hi: {
+                home: 'होम', discover: 'डिस्कवर', upload: 'अपलोड', inbox: 'इनबॉक्स', profile: 'प्रोफाइल',
+                uploadTitle: 'वीडियो अपलोड करें', dragDrop: 'वीडियो चुनें या यहाँ ड्रैग करें',
+                caption: 'कैप्शन लिखें...', uploadBtn: '🚀 अपलोड करें',
+                profileName: 'Dinesh Kumar', profileBio: '@dinesh_kumar_official | पटना, बिहार',
+                videos: 'वीडियो', followers: 'फॉलोअर्स', following: 'फॉलोइंग', editProfile: 'प्रोफाइल एडिट करें',
+                username: 'dinesh_kumar_official', description: 'पटना से प्यार! 🔥 #Bihar #Patna'
+            },
+            en: {
+                home: 'Home', discover: 'Discover', upload: 'Upload', inbox: 'Inbox', profile: 'Profile',
+                uploadTitle: 'Upload Video', dragDrop: 'Select video or drag here',
+                caption: 'Write caption...', uploadBtn: '🚀 Upload',
+                profileName: 'Dinesh Kumar', profileBio: '@dinesh_kumar_official | Patna, Bihar',
+                videos: 'Videos', followers: 'Followers', following: 'Following', editProfile: 'Edit Profile',
+                username: 'dinesh_kumar_official', description: 'Love from Patna! 🔥 #Bihar #Patna'
+            },
+            bn: { home: 'হোম', discover: 'ডিস্কভার', upload: 'আপলোড', inbox: 'ইনবক্স', profile: 'প্রোফাইল' },
+            ta: { home: 'முகப்பு', discover: 'கண்டுபிடி', upload: 'பதிவேற்று', inbox: 'இன்பாக்ஸ்', profile: 'சுயமுறை' },
+            te: { home: 'హోమ్', discover: 'డిస్కవర్', upload: 'అప్‌లోడ్', inbox: 'ఇన్‌బాక్స్', profile: 'ప్రొఫైల్' }
+        };
 
-/* 🔥 PASTE YOUR FIREBASE CONFIG BELOW */
-const firebaseConfig = {
-  apiKey: "YOUR_KEY",
-  authDomain: "YOUR_DOMAIN",
-  projectId: "YOUR_ID",
-  storageBucket: "YOUR_BUCKET",
-  messagingSenderId: "YOUR_MSG",
-  appId: "YOUR_APP_ID"
-};
+        let currentLang = 'hi';
+        let isLiked = false;
+        let isFollowing = false;
+        let currentVideoIndex = 0;
+        let videos = [
+            'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
+            'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4',
+            'https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4'
+        ];
 
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
-const storage = getStorage(app);
+        // Initialize app
+        document.addEventListener('DOMContentLoaded', function() {
+            updateLanguage();
+            setupVideoControls();
+            setupDragDrop();
+        });
 
-window.login = async function(){
-const provider = new GoogleAuthProvider();
-await signInWithPopup(auth, provider);
-alert("Login Success");
-}
+        // Language change
+        function changeLanguage() {
+            currentLang = document.getElementById('language').value;
+            updateLanguage();
+        }
 
-window.logout = async function(){
-await signOut(auth);
-alert("Logout Success");
-}
+        function updateLanguage() {
+            const t = translations[currentLang] || translations.hi;
+            document.getElementById('nav-home').textContent = t.home;
+            document.getElementById('nav-discover').textContent = t.discover;
+            document.getElementById('nav-upload').textContent = t.upload;
+            document.getElementById('nav-inbox').textContent = t.inbox;
+            document.getElementById('nav-profile').textContent = t.profile;
+            document.getElementById('upload-title').textContent = t.uploadTitle;
+            document.getElementById('video-desc').placeholder = t.caption;
+            document.querySelector('.upload-area div').textContent = t.dragDrop;
+            document.querySelector('#upload-title + button').textContent = t.uploadBtn;
+            document.getElementById('username').textContent = t.username;
+            document.getElementById('description').textContent = t.description;
+            document.getElementById('profile-name').textContent = t.profileName;
+            document.getElementById('profile-bio').textContent = t.profileBio;
+        }
 
-window.toggleUpload = function(){
-document.getElementById("uploadBox").style.display =
-document.getElementById("uploadBox").style.display=="block"?"none":"block";
-}
+        // Page navigation
+        function showPage(page) {
+            // Hide all pages
+            document.querySelectorAll('.video-feed, .upload-page').forEach(p => p.style.display = 'none');
+            
+            // Show selected page
+            if (page === 'feed') {
+                document.getElementById('feed-page').style.display = 'block';
+            } else if (page === 'upload') {
+                document.getElementById('upload-page').style.display = 'block';
+            }
+            
+            // Update nav active states
+            document.querySelectorAll('.nav-btn, .nav-item').forEach(btn => btn.classList.remove('active'));
+            document.getElementById(page + '-btn')?.classList.add('active');
+            document.querySelector(`[onclick="showPage('${page}')"]`).classList.add('active');
+        }
 
-window.uploadVideo = async function(){
-const file = document.getElementById("videoFile").files[0];
-const desc = document.getElementById("description").value;
-if(!file) return alert("Select video");
+        // Video controls
+        function setupVideoControls() {
+            const video = document.getElementById('main-video');
+            document.addEventListener('keydown', (e) => {
+                if (e.code === 'Space') {
+                    e.preventDefault();
+                    togglePlayPause();
+                }
+            });
+            video.addEventListener('ended', () => nextVideo());
+        }
 
-const storageRef = ref(storage, "videos/"+file.name);
-await uploadBytes(storageRef, file);
-const url = await getDownloadURL(storageRef);
+        function togglePlayPause() {
+            const video = document.getElementById('main-video');
+            if (video.paused) {
+                video.play();
+            } else {
+                video.pause();
+            }
+        }
 
-await addDoc(collection(db,"videos"),{
-url:url,
-desc:desc,
-likes:0
-});
+        function nextVideo() {
+            currentVideoIndex = (currentVideoIndex + 1) % videos.length;
+            document.getElementById('main-video').src = videos[currentVideoIndex];
+            document.getElementById('main-video').load();
+        }
 
-alert("Uploaded!");
-location.reload();
-}
+        // Like functionality
+        function toggleLike() {
+            isLiked = !isLiked;
+            const btn = document.getElementById('like-btn');
+            const count = document.getElementById('like-count');
+            btn.classList.toggle('liked', isLiked);
+            count.textContent = isLiked ? '1.3K' : '1.2K';
+        }
 
-async function loadVideos(){
-const querySnapshot = await getDocs(collection(db,"videos"));
-querySnapshot.forEach((docu)=>{
-const data = docu.data();
-const div = document.createElement("div");
-div.className="reel";
-div.innerHTML=`
-<video src="${data.url}" autoplay muted loop playsinline></video>
-<div class="icons">
-<div onclick="likeVideo('${docu.id}',this)">❤️ ${data.likes}</div>
-</div>
-<div style="position:absolute;bottom:20px;left:10px;">
-<p>${data.desc}</p>
-</div>
-`;
-document.getElementById("feed").appendChild(div);
-});
-}
-loadVideos();
+        // Comment functionality
+        function toggleComment() {
+            const section = document.getElementById('comments-section');
+            section.style.display = section.style.display === 'block' ? 'none' : 'block';
+        }
 
-window.likeVideo = async function(id,el){
-let count = parseInt(el.innerText.split(" ")[1]);
-count++;
-el.innerText="❤️ "+count;
-await updateDoc(doc(db,"videos",id),{likes:count});
-}
+        // Follow functionality
+        function toggleFollow() {
+            isFollowing = !isFollowing;
+            const count = document.getElementById('follow-count');
+            count.textContent = isFollowing ? 'Following' : 'Follow';
+        }
 
-</script>
+        // Share functionality
+        function shareVideo() {
+            if (navigator.share) {
+                navigator.share({
+                    title: 'Moj Clone Video',
+                    text: 'Check out this awesome video!',
+                    url: window.location.href
+                });
+            } else {
+                navigator.clipboard.writeText(window.location.href);
+                alert('Link copied to clipboard!');
+            }
+        }
+
+        // Drag & Drop for upload
+        function setupDragDrop() {
+            const uploadArea = document.querySelector('.upload-area');
+            const fileInput = document.getElementById('video-file');
+
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                uploadArea.addEventListener(eventName, preventDefaults, false);
+            });
+
+            function preventDefaults(e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+
+            ['dragenter', 'dragover'].forEach(eventName => {
+                uploadArea.addEventListener(eventName, highlight, false);
+            });
+
+            ['dragleave', 'drop'].forEach(eventName => {
+                uploadArea.addEventListener(eventName, unhighlight, false);
+            });
+
+            uploadArea.addEventListener('drop', handleDrop, false);
+
+            function highlight(e) {
+                uploadArea.classList.add('dragover');
+            }
+
+            function unhighlight(e) {
+                uploadArea.classList.remove('dragover');
+            }
+
+            function handleDrop(e) {
+                const dt = e.dataTransfer;
+                const files = dt.files;
+                fileInput.files = files;
+                handleFiles(files);
+            }
+
+            fileInput.addEventListener('change', (e) => handleFiles(e.target.files));
+        }
+
+        function handleFiles(files) {
+            if (files.length > 0) {
+                const file = files[0];
+                if (file.type.startsWith('video/')) {
+                    alert('वीडियो चुना गया! अब अपलोड बटन दबाएं।');
+                }
+            }
+        }
+
+        function uploadVideo() {
+            const fileInput = document.getElementById('video-file');
+            const desc = document.getElementById('video-desc').value;
+            
+            if (fileInput.files.length === 0) {
+                alert('कृपया वीडियो चुनें!');
+                return;
+            }
+            
+            alert('🎉 वीडियो अपलोड हो गया! अब Feed में दिखेगा।');
+            document.getElementById('video-file').value = '';
+            document.getElementById('video-desc').value = '';
+            showPage('feed');
+        }
+
+        // Modal controls
+        function showProfile() {
+            document.getElementById('profile-modal').style.display = 'block';
+        }
+
+        function closeModal() {
+            document.getElementById('profile-modal').style.display = 'none';
+        }
+
+        function editProfile() {
+            alert('प्रोफाइल एडिटिंग फीचर जल्द आ रहा है! 🔥');
+        }
+
+        // Touch/swipe gestures for mobile
+        let startY;
+        document.addEventListener('touchstart', (e) => {
+            startY = e.touches[0].clientY;
+        });
+
+        document.addEventListener('touchend', (e) => {
+            if (!startY) return;
+            const endY = e.changedTouches[0].clientY;
+            const diffY = startY - endY;
+            
+            if (Math.abs(diffY) > 50) {
+                if (diffY > 0) {
+                    nextVideo();
+                }
+            }
+        });
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            switch(e.code) {
+                case 'ArrowUp':
+                    toggleLike();
+                    break;
+                case 'ArrowDown':
+                    toggleComment();
+                    break;
+                case 'ArrowLeft':
+                    toggleFollow();
+                    break;
+                case 'ArrowRight':
+                    shareVideo();
+                    break;
+            }
+        });
+
+        // Auto-play on viewport
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.play().catch(() => {});
+                } else {
+                    entry.target.pause();
+                }
+            });
+        });
+
+        observer.observe(document.getElementById('main-video'));
+    </script>
 </body>
 </html>
