@@ -1,42 +1,131 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>My Reel Website</title>
+<title>Moj Style Reel</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
-body {
-  margin: 0;
-  background: black;
-  overflow-y: scroll;
-  scroll-snap-type: y mandatory;
+body{
+margin:0;
+background:black;
+font-family:sans-serif;
+overflow-y:scroll;
+scroll-snap-type:y mandatory;
+color:white;
 }
 
-.reel {
-  height: 100vh;
-  scroll-snap-align: start;
-  position: relative;
+.reel{
+height:100vh;
+position:relative;
+scroll-snap-align:start;
 }
 
-video {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
+video{
+width:100%;
+height:100%;
+object-fit:cover;
+}
+
+.icons{
+position:absolute;
+right:10px;
+bottom:100px;
+text-align:center;
+}
+
+.icons div{
+margin:20px 0;
+cursor:pointer;
+font-size:18px;
+}
+
+.follow{
+position:absolute;
+bottom:20px;
+left:10px;
+}
+
+button{
+padding:5px 10px;
+border:none;
+border-radius:5px;
+cursor:pointer;
+}
+
+.lang{
+position:fixed;
+top:10px;
+right:10px;
+z-index:1000;
 }
 </style>
 </head>
 <body>
 
-<div class="reel">
-  <video src="https://www.w3schools.com/html/mov_bbb.mp4" autoplay muted loop playsinline></video>
+<div class="lang">
+<select onchange="changeLang(this.value)">
+<option value="hi">Hindi</option>
+<option value="bh">Bhojpuri</option>
+<option value="pa">Punjabi</option>
+</select>
 </div>
 
 <div class="reel">
-  <video src="https://www.w3schools.com/html/movie.mp4" autoplay muted loop playsinline></video>
+<video src="https://www.w3schools.com/html/mov_bbb.mp4" autoplay muted loop playsinline></video>
+
+<div class="icons">
+<div onclick="like(this)">🤍 <span>0</span></div>
+<div>💬 <span>15</span></div>
+<div>🔗 <span>5</span></div>
 </div>
 
-<div class="reel">
-  <video src="https://www.w3schools.com/html/mov_bbb.mp4" autoplay muted loop playsinline></video>
+<div class="follow">
+<h3>@username</h3>
+<button onclick="follow(this)">Follow</button>
+<p id="text">मस्त वीडियो 🔥</p>
 </div>
+</div>
+
+<script>
+function like(el){
+let span = el.querySelector("span");
+let count = parseInt(span.innerText);
+
+if(el.classList.contains("liked")){
+el.classList.remove("liked");
+el.style.color="white";
+span.innerText = count - 1;
+el.innerHTML = "🤍 <span>"+span.innerText+"</span>";
+}else{
+el.classList.add("liked");
+el.style.color="red";
+span.innerText = count + 1;
+el.innerHTML = "❤️ <span>"+span.innerText+"</span>";
+}
+}
+
+function follow(btn){
+if(btn.innerText=="Follow"){
+btn.innerText="Following";
+btn.style.background="gray";
+}else{
+btn.innerText="Follow";
+btn.style.background="red";
+}
+}
+
+function changeLang(lang){
+let text=document.getElementById("text");
+if(lang=="hi"){
+text.innerText="मस्त वीडियो 🔥";
+}
+if(lang=="bh"){
+text.innerText="बहुत बढ़िया वीडियो बा 🔥";
+}
+if(lang=="pa"){
+text.innerText="वधिया वीडियो 🔥";
+}
+}
+</script>
 
 </body>
 </html>
