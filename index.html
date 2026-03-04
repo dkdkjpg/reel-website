@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>बुलु तिक</title>
+<title>DKD</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 body{background:#000;color:#fff;font-family:system-ui;height:100vh;overflow:hidden}
@@ -14,10 +14,7 @@ body{background:#000;color:#fff;font-family:system-ui;height:100vh;overflow:hidd
 .video-card{height:100vh;scroll-snap-align:start;position:relative;background:#000;display:flex;align-items:center;justify-content:center}
 video{width:100%;height:85vh;object-fit:cover;border-radius:0}
 
-.bulu-tik{position:absolute;top:50px;right:25px;font-size:42px;font-weight:900;color:#ff1744!important;text-shadow:0 0 25px #ff1744;z-index:20;animation:glow 1.5s infinite}
-@keyframes glow{0%,100%{text-shadow:0 0 20px #ff1744}50%{text-shadow:0 0 35px #ff1744,0 0 45px #ff1744}}
-
-.video-info{position:absolute;left:25px;top:130px;background:rgba(0,0,0,.92);padding:22px 18px;border-radius:22px;max-width:220px;z-index:10;backdrop-filter:blur(15px);border:1px solid rgba(255,23,68,.3)}
+.video-info{position:absolute;left:25px;top:100px;background:rgba(0,0,0,.92);padding:22px 18px;border-radius:22px;max-width:220px;z-index:10;backdrop-filter:blur(15px);border:1px solid rgba(255,23,68,.3)}
 .username{font-size:18px;font-weight:900;margin-bottom:8px}
 .desc{font-size:14px;line-height:1.3;opacity:.95}
 
@@ -49,19 +46,19 @@ input[type="text"]{width:100%;padding:18px;margin:18px 0;background:rgba(0,0,0,.
 </style>
 </head>
 <body>
-<div class="header"><div class="logo">बुलु तिक</div></div>
+<div class="header"><div class="logo">DKD</div></div>
 
 <div id="feed" class="feed"></div>
 
 <div id="upload-page" class="upload-page">
-<h2 style="font-size:26px;margin-bottom:25px;font-weight:900">📱 नया बुलु तिक बनाओ</h2>
+<h2 style="font-size:26px;margin-bottom:25px;font-weight:900">📱 नया वीडियो बनाओ</h2>
 <div class="upload-area" onclick="document.getElementById('fileInput').click()">
 <div style="font-size:20px;margin-bottom:8px">🎬 वीडियो चुनें</div>
 <div style="font-size:14px;opacity:.8">या यहाँ drag करें</div>
 </div>
 <input type="file" id="fileInput" accept="video/*" style="display:none">
 <video id="preview" controls preload="metadata"></video>
-<input type="text" id="captionInput" placeholder="#बुलु_तिक #DKD #पटना">
+<input type="text" id="captionInput" placeholder="#DKD #पटना">
 <button class="upload-btn" id="uploadButton" onclick="uploadVideo()" disabled>🚀 अपलोड!</button>
 </div>
 
@@ -81,12 +78,13 @@ input[type="text"]{width:100%;padding:18px;margin:18px 0;background:rgba(0,0,0,.
 </div>
 
 <script>
-// WORKING VIDEOS WITH SOUND
+// WORKING VIDEOS
 const videoSources=['https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4','https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4','https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_5mb.mp4','https://filesamples.com/samples/video/mp4/sample_640x360.mp4','https://www.learningcontainer.com/wp-content/uploads/2020/02/sample-video-file.mp4'];
 let uploadedVideos=[];
 
-function generateFeed(){const feed=document.getElementById('feed');let html='';const allVideos=[...videoSources.map((src,i)=>({src,user:`bulu_user_${i}`,desc:`पटना बुलु तिक #${i+1} 🔥`,likes:Math.floor(Math.random()*15000+5000)})),...uploadedVideos.slice(0,10)];allVideos.forEach((video,i)=>{html+=`<div class="video-card">
-<div class="bulu-tik">बुलु तिक</div>
+function generateFeed(){
+const feed=document.getElementById('feed');let html='';const allVideos=[...videoSources.map((src,i)=>({src,user:`dkd_user_${i}`,desc:`पटना का नया वीडियो #${i+1} 🔥`,likes:Math.floor(Math.random()*15000+5000)})),...uploadedVideos.slice(0,10)];allVideos.forEach((video,i)=>{
+html+=`<div class="video-card">
 <video src="${video.src}" muted loop playsinline preload="auto"></video>
 <div class="video-info">
 <div class="username">@${video.user}</div>
@@ -117,7 +115,7 @@ function toggleComments(btn){
 const card=btn.closest('.video-card'),comments=card.querySelector('.comments');comments.style.display=comments.style.display==='block'?'none':'block'}
 
 function shareVideo(){
-navigator.share({title:'बुलु तिक',url:window.location.href}).catch(()=>alert('लिंक कॉपी हो गया!'))
+navigator.share({title:'DKD',url:window.location.href}).catch(()=>alert('लिंक कॉपी!'))
 }
 
 document.getElementById('fileInput').addEventListener('change',e=>{
@@ -125,7 +123,7 @@ const file=e.target.files[0];if(file&&file.type.startsWith('video/')){const prev
 })
 
 function uploadVideo(){
-const file=document.getElementById('fileInput').files[0],caption=document.getElementById('captionInput').value;uploadedVideos.unshift({src:URL.createObjectURL(file),user:'dkd_official',desc:caption||'नया बुलु तिक! 🔥 #DKD',likes:0});generateFeed();document.getElementById('fileInput').value='';document.getElementById('captionInput').value='';document.getElementById('preview').style.display='none';document.getElementById('uploadButton').disabled=true;alert('✅ बुलु तिक ready!');showPage('feed')}
+const file=document.getElementById('fileInput').files[0],caption=document.getElementById('captionInput').value;uploadedVideos.unshift({src:URL.createObjectURL(file),user:'dkd_official',desc:caption||'नया DKD वीडियो! 🔥',likes:0});generateFeed();document.getElementById('fileInput').value='';document.getElementById('captionInput').value='';document.getElementById('preview').style.display='none';document.getElementById('uploadButton').disabled=true;alert('✅ DKD ready!');showPage('feed')}
 
 generateFeed()
 </script>
