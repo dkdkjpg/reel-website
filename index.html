@@ -6,126 +6,228 @@
 <title>DKD</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-body{background:#000;color:#fff;font-family:system-ui;height:100vh;overflow:hidden}
-.header{position:fixed;top:0;left:0;right:0;background:rgba(0,0,0,.95);padding:15px 20px;z-index:100;display:flex;align-items:center;justify-content:center}
-.logo{font-size:26px;font-weight:900;background:linear-gradient(45deg,#ff1744,#ff5722);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+body{background:#000;color:#fff;font-family:-apple-system;height:100vh;overflow:hidden}
+.header{position:fixed;top:0;left:0;right:0;background:rgba(0,0,0,1);padding:12px 20px;z-index:100;display:flex;align-items:center;justify-content:center;border-bottom:2px solid #ff1744}
+.logo{font-size:28px;font-weight:900;background:linear-gradient(45deg,#ff1744,#ff5722);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
 
-.feed{height:100vh;overflow-y:auto;padding-top:70px;padding-bottom:110px;max-width:390px;margin:0 auto;scroll-snap-type:y mandatory}
+.feed{height:100vh;overflow-y:auto;padding-top:65px;padding-bottom:110px;max-width:390px;margin:0 auto;scroll-snap-type:y mandatory}
 .video-card{height:100vh;scroll-snap-align:start;position:relative;background:#000;display:flex;align-items:center;justify-content:center}
-video{width:100%;height:85vh;object-fit:cover;border-radius:0}
+video{width:100%;height:92vh;object-fit:cover}
 
-.video-info{position:absolute;left:25px;top:100px;background:rgba(0,0,0,.92);padding:22px 18px;border-radius:22px;max-width:220px;z-index:10;backdrop-filter:blur(15px);border:1px solid rgba(255,23,68,.3)}
-.username{font-size:18px;font-weight:900;margin-bottom:8px}
-.desc{font-size:14px;line-height:1.3;opacity:.95}
+.video-info{position:absolute;left:20px;top:90px;background:rgba(0,0,0,.95);padding:25px 20px;border-radius:25px;max-width:240px;z-index:10;backdrop-filter:blur(20px);border:1px solid rgba(255,23,68,.4)}
+.username{font-size:20px;font-weight:900;color:#ff5722;margin-bottom:10px}
+.desc{font-size:15px;line-height:1.4;opacity:.95}
 
-.actions{position:absolute;left:35px;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;gap:45px;z-index:15}
-.action-btn{width:65px;height:65px;border-radius:50%;border:none;background:rgba(255,255,255,.18);backdrop-filter:blur(20px);color:#fff;font-size:26px;cursor:pointer;transition:all .3s ease;position:relative}
-.action-btn:hover{transform:scale(1.18);background:rgba(255,23,68,.4);box-shadow:0 12px 35px rgba(255,23,68,.4)}
-.action-btn.liked{background:linear-gradient(135deg,#ff1744,#ff5722)!important;animation:heartBeat .5s}
-@keyframes heartBeat{0%,100%{transform:scale(1.18)}50%{transform:scale(1.35)}}
+.actions{position:absolute;left:25px;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;gap:55px;z-index:15}
+.action-btn{width:70px;height:70px;border-radius:50%;border:2px solid rgba(255,255,255,.3);background:rgba(0,0,0,.7);color:#fff;font-size:28px;cursor:pointer;transition:all .3s;position:relative;display:flex;align-items:center;justify-content:center}
+.action-btn:active{transform:scale(0.95)}
+.action-btn.liked{background:linear-gradient(135deg,#ff1744,#ff5722)!important;border-color:#ff1744!important;box-shadow:0 0 20px rgba(255,23,68,.6)}
+.count{position:absolute;bottom:-28px;left:50%;transform:translateX(-50%);font-size:14px;font-weight:900;color:#fff;min-width:60px;text-align:center;background:rgba(0,0,0,.8);padding:2px 8px;border-radius:12px}
 
-.count{position:absolute;bottom:-22px;left:50%;transform:translateX(-50%);font-size:13px;font-weight:700;min-width:50px;text-align:center}
+.comments{position:absolute;right:20px;top:50%;transform:translateY(-50%);width:200px;max-height:450px;overflow-y:auto;background:rgba(0,0,0,.98);padding:25px;border-radius:25px;border:2px solid rgba(255,23,68,.5);display:none;backdrop-filter:blur(25px)}
+.comment{display:flex;gap:15px;margin-bottom:20px;padding-bottom:15px;border-bottom:1px solid rgba(255,255,255,.1);font-size:14px}
+.avatar{width:40px;height:40px;border-radius:50%;background:linear-gradient(45deg,#ff1744,#ff5722);flex-shrink:0}
+.comment-text{max-width:140px}
 
-.comments{position:absolute;right:25px;top:50%;transform:translateY(-50%);width:170px;max-height:380px;overflow-y:auto;background:rgba(0,0,0,.96);padding:22px;border-radius:22px;border:2px solid rgba(255,23,68,.4);display:none;backdrop-filter:blur(20px)}
-.comment{display:flex;gap:12px;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid #333;font-size:13px}
-.avatar{width:32px;height:32px;border-radius:50%;background:linear-gradient(45deg,#ff1744,#ff5722);flex-shrink:0}
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;background:rgba(0,0,0,.99);display:flex;justify-content:space-around;padding:15px 0;z-index:100;border-top:2px solid rgba(255,23,68,.3);backdrop-filter:blur(30px)}
+.nav-item{text-align:center;cursor:pointer;padding:10px;flex:1;transition:all .3s;font-weight:600}
+.nav-item.active{color:#ff5722;transform:scale(1.1)}
+.nav-icon{font-size:26px;display:block;margin-bottom:4px}
 
-.bottom-nav{position:fixed;bottom:0;left:0;right:0;background:rgba(0,0,0,.98);display:flex;justify-content:space-around;padding:12px 0;z-index:100;backdrop-filter:blur(20px)}
-.nav-item{text-align:center;cursor:pointer;padding:8px;flex:1;transition:all .3s}
-.nav-item.active{color:#ff5722;transform:scale(1.08)}
-.nav-icon{font-size:24px;margin-bottom:3px;display:block}
-
-.upload-page{display:none;max-width:390px;margin:90px auto 0;padding-bottom:130px;text-align:center}
-.upload-area{border:3px dashed #ff5722;padding:70px 40px;border-radius:25px;margin:40px 0;cursor:pointer;transition:all .3s;background:rgba(255,23,68,.03)}
+.upload-page{display:none;max-width:390px;margin:85px auto 0;padding-bottom:140px;text-align:center}
+.upload-area{border:4px dashed #ff5722;padding:90px 50px;border-radius:30px;margin:50px 0;cursor:pointer;transition:all .4s;background:rgba(255,23,68,.05);position:relative;overflow:hidden}
+.upload-area::before{content:'';position:absolute;top:0;left:0;right:0;bottom:0;background:linear-gradient(45deg,rgba(255,23,68,.1),transparent);opacity:0;transition:.3s}
 .upload-area:hover{border-color:#ff1744;transform:scale(1.02)}
-#preview{max-width:100%;max-height:280px;border-radius:20px;margin:25px 0;display:none}
-input[type="text"]{width:100%;padding:18px;margin:18px 0;background:rgba(0,0,0,.8);color:#fff;border:2px solid #ff5722;border-radius:20px;font-size:16px;box-sizing:border-box}
-.upload-btn{background:linear-gradient(45deg,#ff1744,#ff5722);color:#fff;border:none;padding:20px 45px;border-radius:28px;font-size:18px;font-weight:900;cursor:pointer;margin-top:25px;transition:all .3s}
-.upload-btn:hover{transform:scale(1.05);box-shadow:0 10px 30px rgba(255,23,68,.5)}
-.upload-btn:disabled{opacity:.5;cursor:not-allowed}
+.upload-area:hover::before{opacity:1}
+.upload-text{font-size:22px;font-weight:900;margin-bottom:10px}
+#preview{max-width:100%;max-height:320px;border-radius:25px;margin:30px 0;display:none;box-shadow:0 20px 40px rgba(0,0,0,.8)}
+input[type="text"]{width:100%;padding:20px;margin:20px 0;background:rgba(0,0,0,.9);color:#fff;border:2px solid #ff5722;border-radius:25px;font-size:17px;box-sizing:border-box}
+.upload-btn{background:linear-gradient(45deg,#ff1744,#ff5722);color:#fff;border:none;padding:22px 60px;border-radius:35px;font-size:20px;font-weight:900;cursor:pointer;margin-top:30px;transition:all .3s;box-shadow:0 10px 30px rgba(255,23,68,.4)}
+.upload-btn:hover{transform:translateY(-3px);box-shadow:0 20px 40px rgba(255,23,68,.6)}
+.upload-btn:disabled{opacity:.6;cursor:not-allowed;transform:none}
 </style>
 </head>
 <body>
-<div class="header"><div class="logo">DKD</div></div>
+
+<div class="header">
+<div class="logo">DKD</div>
+</div>
 
 <div id="feed" class="feed"></div>
 
 <div id="upload-page" class="upload-page">
-<h2 style="font-size:26px;margin-bottom:25px;font-weight:900">📱 नया वीडियो बनाओ</h2>
+<h2 style="font-size:28px;margin-bottom:30px;font-weight:900;color:#ff5722">📱 नया वीडियो अपलोड करो</h2>
 <div class="upload-area" onclick="document.getElementById('fileInput').click()">
-<div style="font-size:20px;margin-bottom:8px">🎬 वीडियो चुनें</div>
-<div style="font-size:14px;opacity:.8">या यहाँ drag करें</div>
+<div class="upload-text">🎬 वीडियो चुनें</div>
+<div style="font-size:16px;opacity:.9">या यहाँ drag करें (MP4/MOV)</div>
 </div>
 <input type="file" id="fileInput" accept="video/*" style="display:none">
 <video id="preview" controls preload="metadata"></video>
-<input type="text" id="captionInput" placeholder="#DKD #पटना">
-<button class="upload-btn" id="uploadButton" onclick="uploadVideo()" disabled>🚀 अपलोड!</button>
+<input type="text" id="captionInput" placeholder="#DKD #पटना #ट्रेंडिंग" maxlength="100">
+<button class="upload-btn" id="uploadButton" onclick="uploadVideo()" disabled>🚀 अपलोड करो!</button>
 </div>
 
 <div class="bottom-nav">
 <div class="nav-item active" onclick="showPage('feed')">
-<span class="nav-icon">🏠</span><span>होम</span>
+<span class="nav-icon">🏠</span>
+<span>होम</span>
 </div>
 <div class="nav-item" onclick="showPage('upload')">
-<span class="nav-icon">+</span><span>अपलोड</span>
+<span class="nav-icon">+</span>
+<span>अपलोड</span>
 </div>
 <div class="nav-item">
-<span class="nav-icon">❤️</span><span>लाइक</span>
+<span class="nav-icon">❤️</span>
+<span>लाइक</span>
 </div>
 <div class="nav-item">
-<span class="nav-icon">👤</span><span>मेरा</span>
+<span class="nav-icon">👥</span>
+<span>फ़ॉलोअर्स</span>
 </div>
 </div>
 
 <script>
-// WORKING VIDEOS
-const videoSources=['https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4','https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4','https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_5mb.mp4','https://filesamples.com/samples/video/mp4/sample_640x360.mp4','https://www.learningcontainer.com/wp-content/uploads/2020/02/sample-video-file.mp4'];
+const videoSources=[
+'https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4',
+'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
+'https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_5mb.mp4',
+'https://filesamples.com/samples/video/mp4/sample_640x360.mp4',
+'https://www.learningcontainer.com/wp-content/uploads/2020/02/sample-video-file.mp4',
+'https://samplelib.com/lib/preview/mp4/sample-10s.mp4'
+];
 let uploadedVideos=[];
 
 function generateFeed(){
-const feed=document.getElementById('feed');let html='';const allVideos=[...videoSources.map((src,i)=>({src,user:`dkd_user_${i}`,desc:`पटना का नया वीडियो #${i+1} 🔥`,likes:Math.floor(Math.random()*15000+5000)})),...uploadedVideos.slice(0,10)];allVideos.forEach((video,i)=>{
-html+=`<div class="video-card">
-<video src="${video.src}" muted loop playsinline preload="auto"></video>
+const feed=document.getElementById('feed');
+let html='';
+const allVideos=[...videoSources.map((src,i)=>({
+src,
+user:`dkd_star_${i+1}`,
+desc:`पटना का सबसे तेज वीडियो 🔥 #DKD #${i+1}`,
+likes:Math.floor(Math.random()*25000+10000)
+})),...uploadedVideos.slice(0,15)];
+
+allVideos.slice(0,25).forEach((video,i)=>{
+html+=`
+<div class="video-card">
+<video src="${video.src}" muted loop playsinline preload="auto" webkit-playsinline></video>
 <div class="video-info">
 <div class="username">@${video.user}</div>
 <div class="desc">${video.desc}</div>
 </div>
 <div class="actions">
-<button class="action-btn ${i%3?'':'liked'}" onclick="toggleLike(this)"><span>❤️</span><div class="count">${(video.likes/1000).toFixed(1)}K</div></button>
-<button class="action-btn" onclick="toggleComments(this)"><span>💬</span><div class="count">1.8K</div></button>
-<button class="action-btn" onclick="shareVideo()"><span>↗️</span><div class="count">Share</div></button>
+<button class="action-btn ${i%2===0?'liked':''}" onclick="toggleLike(this)">
+<span>❤️</span>
+<div class="count">${(video.likes/1000).toFixed(1)}K</div>
+</button>
+<button class="action-btn" onclick="toggleComments(this)">
+<span>💬</span>
+<div class="count">${(Math.random()*5+1).toFixed(1)}K</div>
+</button>
+<button class="action-btn" onclick="shareVideo()">
+<span>↗️</span>
+<div class="count">Share</div>
+</button>
 </div>
 <div class="comments">
-<div class="comment"><div class="avatar"></div><div>जबरदस्त भाई! 🔥</div></div>
-<div class="comment"><div class="avatar" style="background:linear-gradient(45deg,#44ff44,#88ff88)"></div><div>पटना का बादशाह!</div></div>
+<div class="comment">
+<div class="avatar"></div>
+<div class="comment-text">पटना का बादशाह! 🔥🔥</div>
 </div>
-</div>`});feed.innerHTML=html;setTimeout(()=>{const observer=new IntersectionObserver(entries=>{entries.forEach(entry=>{const video=entry.target.querySelector('video');if(entry.isIntersecting){video.play().catch(()=>{})}else{video.pause()}})},{threshold:.6});document.querySelectorAll('.video-card').forEach(card=>observer.observe(card))},800)}
+<div class="comment">
+<div class="avatar" style="background:linear-gradient(45deg,#4caf50,#81c784)"></div>
+<div class="comment-text">जबरदस्त स्टेप्स भाई!</div>
+</div>
+<div class="comment">
+<div class="avatar" style="background:linear-gradient(45deg,#2196f3,#64b5f6)"></div>
+<div class="comment-text">ट्रेंडिंग नंबर 1!</div>
+</div>
+</div>
+</div>`;
+});
+feed.innerHTML=html;
+
+setTimeout(()=>{
+const observer=new IntersectionObserver(entries=>{
+entries.forEach(entry=>{
+const video=entry.target.querySelector('video');
+if(entry.isIntersecting){
+video.currentTime=0;
+video.play().catch(()=>{}).then(()=>video.play());
+}else{
+video.pause();
+video.currentTime=0;
+}
+})
+},{threshold:0.7});
+document.querySelectorAll('.video-card').forEach(card=>observer.observe(card));
+},1000);
+}
 
 function showPage(page){
 document.getElementById('feed').style.display=page==='feed'?'block':'none';
 document.getElementById('upload-page').style.display=page==='upload'?'block':'none';
-document.querySelectorAll('.nav-item').forEach(item=>item.classList.remove('active'));
-event.currentTarget.classList.add('active')
+document.querySelectorAll('.nav-item').forEach((item,i)=>item.classList.toggle('active',i===([...'feed upload like profile'].indexOf(page))));
 }
 
 function toggleLike(btn){
-btn.classList.toggle('liked');const count=btn.querySelector('.count');let num=parseFloat(count.textContent)*1000;num+=btn.classList.contains('liked')?1200:-1200;count.textContent=(num/1000).toFixed(1)+'K'}
+btn.classList.toggle('liked');
+const count=btn.querySelector('.count');
+let num=parseFloat(count.textContent.replace('K',''))*1000;
+num+=btn.classList.contains('liked')?1500:-1500;
+count.textContent=(num/1000).toFixed(1)+'K';
+}
 
 function toggleComments(btn){
-const card=btn.closest('.video-card'),comments=card.querySelector('.comments');comments.style.display=comments.style.display==='block'?'none':'block'}
+const card=btn.closest('.video-card');
+const comments=card.querySelector('.comments');
+comments.style.display=comments.style.display==='block'?'none':'block';
+}
 
 function shareVideo(){
-navigator.share({title:'DKD',url:window.location.href}).catch(()=>alert('लिंक कॉपी!'))
+if(navigator.share){
+navigator.share({title:'DKD - पटना का नया वीडियो',url:window.location.href});
+}else{
+navigator.clipboard.writeText(window.location.href);
+alert('✅ लिंक कॉपी हो गया!');
+}
 }
 
 document.getElementById('fileInput').addEventListener('change',e=>{
-const file=e.target.files[0];if(file&&file.type.startsWith('video/')){const preview=document.getElementById('preview');preview.src=URL.createObjectURL(file);preview.style.display='block';document.getElementById('uploadButton').disabled=false}
-})
+const file=e.target.files[0];
+if(file&&file.type.startsWith('video/')&&file.size<100*1024*1024){
+const preview=document.getElementById('preview');
+preview.src=URL.createObjectURL(file);
+preview.load();
+preview.style.display='block';
+document.getElementById('uploadButton').disabled=false;
+}else{
+alert('केवल 100MB तक का MP4 वीडियो चुनें!');
+}
+});
 
 function uploadVideo(){
-const file=document.getElementById('fileInput').files[0],caption=document.getElementById('captionInput').value;uploadedVideos.unshift({src:URL.createObjectURL(file),user:'dkd_official',desc:caption||'नया DKD वीडियो! 🔥',likes:0});generateFeed();document.getElementById('fileInput').value='';document.getElementById('captionInput').value='';document.getElementById('preview').style.display='none';document.getElementById('uploadButton').disabled=true;alert('✅ DKD ready!');showPage('feed')}
+const file=document.getElementById('fileInput').files[0];
+const caption=document.getElementById('captionInput').value;
+if(file){
+uploadedVideos.unshift({
+src:URL.createObjectURL(file),
+user:'dkd_official',
+desc:caption||'नया DKD वीडियो! 🔥 #पटना',
+likes:0
+});
+generateFeed();
+document.getElementById('fileInput').value='';
+document.getElementById('captionInput').value='';
+document.getElementById('preview').style.display='none';
+document.getElementById('preview').src='';
+document.getElementById('uploadButton').disabled=true;
+alert('✅ आपका वीडियो अपलोड हो गया!');
+showPage('feed');
+}
+}
 
-generateFeed()
+generateFeed();
 </script>
 </body>
 </html>
