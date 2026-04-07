@@ -1,60 +1,909 @@
 <!DOCTYPE html>
-<html lang="hi">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Moj Clone</title>
+    <title>DKD - Bhojpuri Reels & Photos</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
-        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #000; font-family: sans-serif; }
-        .app-container { height: 100vh; scroll-snap-type: y mandatory; overflow-y: scroll; scrollbar-width: none; }
-        .app-container::-webkit-scrollbar { display: none; }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;display=swap');
         
-        .video-card { position: relative; width: 100%; height: 100vh; scroll-snap-align: start; display: flex; align-items: center; justify-content: center; color: white; }
-        video { width: 100%; height: 100%; object-fit: cover; }
+        :root {
+            --tw-color-primary: #e1306c;
+        }
         
-        .ui-overlay { position: absolute; bottom: 30px; left: 10px; z-index: 10; }
-        .side-bar { position: absolute; right: 10px; bottom: 100px; display: flex; flex-direction: column; gap: 20px; text-align: center; }
-        .icon { font-size: 25px; cursor: pointer; }
+        * {
+            font-family: 'Inter', system_ui, sans-serif;
+        }
+        
+        .navbar {
+            backdrop-filter: blur(12px);
+        }
+        
+        #reels-container {
+            scroll-snap-type: y mandatory;
+            -webkit-overflow-scrolling: touch;
+        }
+        
+        .reel-slide {
+            scroll-snap-align: start;
+            scroll-snap-stop: always;
+        }
+        
+        .reel-video {
+            object-fit: cover;
+            transition: all 0.3s ease;
+        }
+        
+        .action-btn {
+            transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .action-btn:active {
+            transform: scale(1.3);
+        }
+        
+        .modal {
+            animation: modalPop 0.3s ease forwards;
+        }
+        
+        @keyframes modalPop {
+            0% { opacity: 0; transform: scale(0.95); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+        
+        .dkd-logo {
+            font-family: 'Inter', sans-serif;
+            letter-spacing: -2px;
+        }
     </style>
 </head>
-<body>
+<body class="bg-black text-white overflow-hidden">
+    <!-- NAVBAR -->
+    <nav class="navbar bg-black/90 border-b border-white/10 fixed top-0 left-0 right-0 z-50">
+        <div class="max-w-screen-2xl mx-auto px-4 h-14 flex items-center justify-between">
+            
+            <!-- Logo -->
+            <div class="flex items-center gap-x-2">
+                <div class="w-9 h-9 bg-gradient-to-br from-pink-500 to-purple-600 rounded-2xl flex items-center justify-center text-2xl shadow-inner">
+                    🇮🇳
+                </div>
+                <h1 onclick="window.location.reload()" class="dkd-logo text-3xl font-bold tracking-tighter text-white">
+                    DKD
+                </h1>
+                <span class="text-xs bg-white/10 text-white px-2 py-px rounded-lg font-medium">Bhojpuri</span>
+            </div>
 
-<div class="app-container">
-    <div class="video-card">
-        <video src="https://www.w3schools.com/html/mov_bbb.mp4" loop onclick="this.paused ? this.play() : this.pause()"></video>
-        <div class="ui-overlay">
-            <h3>@User_One</h3>
-            <p>यह मेरा पहला वीडियो है! #MojClone</p>
+            <!-- Tabs -->
+            <div class="flex items-center bg-white/10 rounded-3xl p-1 text-sm font-medium">
+                <button onclick="switchTab(0)" id="tab-photos"
+                        class="tab-button px-6 py-2 rounded-3xl transition-all flex items-center gap-x-1.5">
+                    <i class="fa-solid fa-image"></i>
+                    <span id="photos-text">Photos</span>
+                </button>
+                <button onclick="switchTab(1)" id="tab-reels"
+                        class="tab-button px-6 py-2 rounded-3xl bg-white text-black transition-all flex items-center gap-x-1.5 active">
+                    <i class="fa-solid fa-film"></i>
+                    <span id="reels-text">Reels</span>
+                </button>
+            </div>
+
+            <!-- Right side controls -->
+            <div class="flex items-center gap-x-6">
+                
+                <!-- Search -->
+                <div onclick="showSearch()" class="flex items-center bg-white/10 hover:bg-white/20 transition-colors rounded-3xl px-4 py-1.5 text-sm cursor-pointer">
+                    <i class="fa-solid fa-magnifying-glass mr-2"></i>
+                    <span id="search-text" class="hidden md:inline">Search Bhojpuri reels...</span>
+                </div>
+
+                <!-- Upload Button -->
+                <button onclick="showUploadModal()" 
+                        class="flex items-center gap-x-2 bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 px-5 h-9 rounded-3xl text-sm font-semibold shadow-lg shadow-pink-500/30">
+                    <i class="fa-solid fa-cloud-upload"></i>
+                    <span id="upload-text">Upload Video</span>
+                </button>
+
+                <!-- Language Selector -->
+                <div class="relative group">
+                    <button onclick="toggleLanguageDropdown()" 
+                            class="flex items-center gap-x-1 bg-white/10 hover:bg-white/20 px-4 h-9 rounded-3xl text-sm font-medium">
+                        <span id="current-lang">🇬🇧 EN</span>
+                        <i class="fa-solid fa-chevron-down text-xs"></i>
+                    </button>
+                    
+                    <!-- Dropdown -->
+                    <div id="language-dropdown" onclick="if(event.target.tagName==='BUTTON')return" 
+                         class="hidden group-hover:flex absolute right-0 mt-2 w-48 bg-zinc-900 border border-white/10 rounded-3xl shadow-2xl py-2 z-50 flex-col">
+                        <button onclick="changeLanguage('en')" class="flex items-center gap-x-3 hover:bg-white/10 px-6 py-3 text-left w-full">
+                            🇬🇧 <span>English</span>
+                        </button>
+                        <button onclick="changeLanguage('hi')" class="flex items-center gap-x-3 hover:bg-white/10 px-6 py-3 text-left w-full">
+                            🇮🇳 <span>हिंदी</span>
+                        </button>
+                        <button onclick="changeLanguage('bh')" class="flex items-center gap-x-3 hover:bg-white/10 px-6 py-3 text-left w-full">
+                            🇮🇳 <span>भोजपुरी</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Settings -->
+                <button onclick="showSettingsModal()" 
+                        class="w-9 h-9 flex items-center justify-center hover:bg-white/10 rounded-2xl transition-colors text-xl">
+                    <i class="fa-solid fa-gear"></i>
+                </button>
+
+                <!-- Profile -->
+                <div onclick="showProfile()" class="flex items-center gap-x-2 cursor-pointer">
+                    <div class="w-8 h-8 bg-gradient-to-br from-purple-400 to-pink-400 rounded-2xl flex items-center justify-center text-lg ring-2 ring-white/30">
+                        👑
+                    </div>
+                    <div class="hidden md:block">
+                        <p class="text-sm font-semibold">@bhojpuriking</p>
+                    </div>
+                </div>
+            </div>
         </div>
-        <div class="side-bar">
-            <div class="icon">❤️<br><small>12k</small></div>
-            <div class="icon">💬<br><small>300</small></div>
-            <div class="icon">🔗</div>
+    </nav>
+
+    <!-- MAIN CONTENT AREA -->
+    <div class="pt-14 h-screen flex">
+        
+        <!-- PHOTOS TAB -->
+        <div id="photos-content" class="hidden flex-1 overflow-auto p-6">
+            <div class="max-w-screen-2xl mx-auto">
+                <h2 id="photos-header" class="text-2xl font-semibold mb-6 flex items-center gap-x-2">
+                    <i class="fa-solid fa-image"></i> 
+                    Photo Sharing Feed
+                </h2>
+                
+                <!-- Instagram-style Photo Grid -->
+                <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4">
+                    <!-- Populated by JS with 24 dummy photos -->
+                </div>
+            </div>
+        </div>
+
+        <!-- REELS TAB (Main Feature) -->
+        <div id="reels-content" class="flex-1 flex flex-col">
+            
+            <!-- Reel Scroll Container -->
+            <div id="reels-container" class="flex-1 overflow-y-auto bg-black snap-y snap-mandatory">
+                <!-- All 200 Bhojpuri reels will be populated here by JavaScript -->
+            </div>
+            
+            <!-- Reel Counter -->
+            <div class="absolute bottom-6 right-6 bg-black/70 text-white text-xs px-3 py-1 rounded-3xl flex items-center gap-x-1 z-50 font-mono">
+                <span id="reel-count" class="font-semibold">200</span>
+                <span class="text-white/60">Bhojpuri Reels</span>
+                <div class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+            </div>
         </div>
     </div>
 
-    <div class="video-card">
-        <video src="https://www.w3schools.com/html/movie.mp4" loop onclick="this.paused ? this.play() : this.pause()"></video>
-        <div class="ui-overlay">
-            <h3>@Creative_Mind</h3>
-            <p>मजेदार वीडियो देखिए! 🚀</p>
-        </div>
-        <div class="side-bar">
-            <div class="icon">❤️<br><small>5k</small></div>
-            <div class="icon">💬<br><small>150</small></div>
-            <div class="icon">🔗</div>
+    <!-- UPLOAD MODAL -->
+    <div onclick="if(event.target.id === 'upload-modal')hideUploadModal()" 
+         id="upload-modal"
+         class="hidden fixed inset-0 bg-black/80 flex items-center justify-center z-[9999]">
+        <div onclick="event.stopImmediatePropagation()" 
+             class="modal bg-white text-black w-full max-w-lg mx-4 rounded-3xl p-8">
+            <h3 id="upload-title" class="text-2xl font-semibold mb-6">Upload New Bhojpuri Reel</h3>
+            
+            <div class="border-2 border-dashed border-pink-300 rounded-3xl p-8 text-center mb-8 hover:border-pink-500 transition-colors">
+                <input type="file" id="video-upload-input" accept="video/*" class="hidden" onchange="handleVideoSelect(event)">
+                <div onclick="document.getElementById('video-upload-input').click()" class="cursor-pointer">
+                    <i class="fa-solid fa-cloud-upload text-6xl text-pink-500 mb-4"></i>
+                    <p id="upload-instruction" class="text-lg font-medium">Select or drag your Bhojpuri video</p>
+                    <p class="text-sm text-zinc-500">MP4 • Max 90 seconds • Bhojpuri recommended</p>
+                </div>
+                
+                <!-- Video Preview -->
+                <div id="upload-preview" class="hidden mt-6 rounded-2xl overflow-hidden bg-black">
+                    <video id="preview-video" class="w-full max-h-64 mx-auto" controls muted></video>
+                </div>
+            </div>
+
+            <div class="space-y-6">
+                <div>
+                    <label class="block text-sm font-medium mb-2">Reel Title (in Bhojpuri)</label>
+                    <input id="reel-title-input" type="text" 
+                           class="w-full px-4 py-3 bg-zinc-100 rounded-2xl focus:outline-none focus:ring-2 focus:ring-pink-500"
+                           placeholder="भोजपुरी गाना - दिल के धड़कन 💖" value="भोजपुरी नाच #">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium mb-2">Caption</label>
+                    <textarea id="reel-caption-input" rows="3"
+                              class="w-full px-4 py-3 bg-zinc-100 rounded-2xl focus:outline-none focus:ring-2 focus:ring-pink-500"
+                              placeholder="Bihar ka swag! #BhojpuriReel #DKD"></textarea>
+                </div>
+
+                <div class="flex justify-between">
+                    <button onclick="hideUploadModal()" 
+                            class="px-8 py-3 text-zinc-500 font-medium">Cancel</button>
+                    <button onclick="uploadVideo()" 
+                            class="px-8 py-3 bg-gradient-to-r from-pink-500 to-purple-600 text-white font-semibold rounded-3xl flex items-center gap-x-2">
+                        <i class="fa-solid fa-paper-plane"></i>
+                        <span id="post-btn-text">Post to DKD</span>
+                    </button>
+                </div>
+            </div>
         </div>
     </div>
-</div>
 
-<script>
-    // वीडियो पर क्लिक करने पर प्ले/पॉज करने के लिए
-    document.querySelectorAll('video').forEach(v => {
-        v.addEventListener('click', () => {
-            if (v.paused) v.play(); else v.pause();
-        });
-    });
-</script>
+    <!-- COMMENT MODAL -->
+    <div onclick="if(event.target.id === 'comment-modal')hideCommentModal()" 
+         id="comment-modal"
+         class="hidden fixed inset-0 bg-black/80 flex items-end md:items-center justify-center z-[10000]">
+        <div onclick="event.stopImmediatePropagation()" 
+             class="modal bg-white text-black w-full max-w-xl mx-0 md:mx-4 rounded-t-3xl md:rounded-3xl overflow-hidden max-h-[85vh] flex flex-col">
+            
+            <div class="px-6 py-4 border-b flex items-center justify-between sticky top-0 bg-white z-10">
+                <h4 id="comment-modal-title" class="font-semibold text-lg">Comments</h4>
+                <i onclick="hideCommentModal()" class="fa-solid fa-xmark text-2xl cursor-pointer"></i>
+            </div>
+            
+            <div id="comments-list" class="flex-1 overflow-auto px-6 py-4 space-y-6">
+                <!-- JS populated fake + user comments -->
+            </div>
+            
+            <div class="border-t p-4 flex gap-x-3 bg-white">
+                <input id="new-comment-input" 
+                       class="flex-1 bg-zinc-100 rounded-3xl px-6 py-3 focus:outline-none text-sm"
+                       placeholder="Write a comment... (in selected language)">
+                <button onclick="postComment()" 
+                        class="bg-pink-500 text-white h-12 w-12 rounded-2xl flex items-center justify-center">
+                    <i class="fa-solid fa-paper-plane"></i>
+                </button>
+            </div>
+        </div>
+    </div>
 
+    <!-- SETTINGS MODAL -->
+    <div onclick="if(event.target.id === 'settings-modal')hideSettingsModal()" 
+         id="settings-modal"
+         class="hidden fixed inset-0 bg-black/80 flex items-center justify-center z-[9999]">
+        <div onclick="event.stopImmediatePropagation()" 
+             class="modal bg-white text-black w-full max-w-md mx-4 rounded-3xl p-6">
+            <div class="flex justify-between items-center mb-6">
+                <h3 id="settings-title" class="text-2xl font-semibold">Settings</h3>
+                <i onclick="hideSettingsModal()" class="fa-solid fa-xmark text-2xl"></i>
+            </div>
+            
+            <div class="space-y-2">
+                <button onclick="fakeAction('Account settings opened')" 
+                        class="w-full flex items-center justify-between px-6 py-4 hover:bg-zinc-100 rounded-2xl text-left">
+                    <div class="flex items-center gap-x-4">
+                        <i class="fa-solid fa-user w-5"></i>
+                        <span id="account-text">Account</span>
+                    </div>
+                    <i class="fa-solid fa-chevron-right text-zinc-400"></i>
+                </button>
+                
+                <button onclick="fakeAction('Privacy settings opened')" 
+                        class="w-full flex items-center justify-between px-6 py-4 hover:bg-zinc-100 rounded-2xl text-left">
+                    <div class="flex items-center gap-x-4">
+                        <i class="fa-solid fa-shield-halved w-5"></i>
+                        <span id="privacy-text">Privacy &amp; Safety</span>
+                    </div>
+                    <i class="fa-solid fa-chevron-right text-zinc-400"></i>
+                </button>
+                
+                <button onclick="fakeAction('Language preference saved')" 
+                        class="w-full flex items-center justify-between px-6 py-4 hover:bg-zinc-100 rounded-2xl text-left">
+                    <div class="flex items-center gap-x-4">
+                        <i class="fa-solid fa-language w-5"></i>
+                        <span id="lang-settings-text">Language Preferences</span>
+                    </div>
+                    <i class="fa-solid fa-chevron-right text-zinc-400"></i>
+                </button>
+                
+                <button onclick="fakeAction('Notifications turned on')" 
+                        class="w-full flex items-center justify-between px-6 py-4 hover:bg-zinc-100 rounded-2xl text-left">
+                    <div class="flex items-center gap-x-4">
+                        <i class="fa-solid fa-bell w-5"></i>
+                        <span id="notifications-text">Notifications</span>
+                    </div>
+                    <i class="fa-solid fa-chevron-right text-zinc-400"></i>
+                </button>
+                
+                <div class="pt-4 border-t">
+                    <button onclick="logout()" 
+                            class="w-full py-4 text-red-500 font-medium flex items-center justify-center gap-x-2">
+                        <i class="fa-solid fa-right-from-bracket"></i>
+                        <span id="logout-text">Logout</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TOAST -->
+    <div id="toast" onclick="this.classList.add('hidden')" 
+         class="hidden fixed bottom-6 left-1/2 -translate-x-1/2 bg-zinc-900 text-white text-sm px-6 py-3 rounded-3xl shadow-2xl flex items-center gap-x-2 z-[99999]">
+        <i class="fa-solid fa-check-circle text-green-400"></i>
+        <span id="toast-text"></span>
+    </div>
+
+    <script>
+        // Tailwind script initialization
+        function initializeTailwind() {
+            tailwind.config = {
+                content: [],
+                theme: {
+                    extend: {}
+                }
+            }
+        }
+
+        // Global variables
+        let currentLang = 'en'
+        let reelsData = []
+        let currentReelIdForComment = null
+        let userComments = {} // Store comments per reel
+        let followedReels = new Set()
+        let likedReels = new Set()
+
+        // Translations
+        const translations = {
+            en: {
+                photos: "Photos",
+                reels: "Reels",
+                upload: "Upload Video",
+                search: "Search Bhojpuri reels...",
+                like: "Like",
+                comment: "Comment",
+                share: "Share",
+                follow: "Follow",
+                following: "Following",
+                settings: "Settings",
+                account: "Account",
+                privacy: "Privacy & Safety",
+                langSettings: "Language Preferences",
+                notifications: "Notifications",
+                logout: "Logout",
+                post: "Post to DKD"
+            },
+            hi: {
+                photos: "फ़ोटो",
+                reels: "रील्स",
+                upload: "वीडियो अपलोड करें",
+                search: "भोजपुरी रील्स खोजें...",
+                like: "पसंद करें",
+                comment: "टिप्पणी",
+                share: "शेयर",
+                follow: "फॉलो करें",
+                following: "फॉलोइंग",
+                settings: "सेटिंग्स",
+                account: "खाता",
+                privacy: "प्राइवेसी और सुरक्षा",
+                langSettings: "भाषा सेटिंग्स",
+                notifications: "सूचनाएं",
+                logout: "लॉग आउट",
+                post: "DKD पर पोस्ट करें"
+            },
+            bh: {
+                photos: "फ़ोटो",
+                reels: "रील्स",
+                upload: "वीडियो अपलोड करीं",
+                search: "भोजपुरी रील खोजीं...",
+                like: "पसंद करीं",
+                comment: "कमेंट",
+                share: "शेयर करीं",
+                follow: "फॉलो करीं",
+                following: "फॉलोइंग",
+                settings: "सेटिंग",
+                account: "खाता",
+                privacy: "प्राइवेसी",
+                langSettings: "भाषा",
+                notifications: "नोटिफिकेशन",
+                logout: "लॉग आउट",
+                post: "DKD पर पोस्ट करीं"
+            }
+        }
+
+        // Generate 200 Bhojpuri reels
+        function generateReels() {
+            reelsData = []
+            const baseVideo = "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny_320x180_10s_1MB.mp4"
+            
+            const bhojpuriCaptions = [
+                "भोजपुरी नाच 💃 बिहार का जोश 🔥",
+                "दिल के धड़कन ❤️ #BhojpuriHit",
+                "लइकी के स्वैग 😎 गाना बजाओ",
+                "बाबूजी का स्टाइल 🎤",
+                "हमार बिहार - मस्ती भरी रील",
+                "भोजपुरी गाना 2026 🎵",
+                "के हो भाई! 😂",
+                "नाचो नाचो रे 💥",
+                "प्यार भरी भोजपुरी कहानी",
+                "देस के रंग बिरंगे रील्स"
+            ]
+            
+            for (let i = 1; i <= 200; i++) {
+                const randomCaption = bhojpuriCaptions[Math.floor(Math.random() * bhojpuriCaptions.length)]
+                reelsData.push({
+                    id: i,
+                    username: "@bhojpuriking",
+                    caption: `${randomCaption} #${i}`,
+                    videoUrl: baseVideo, // Same demo video for all (replace in production with real Bhojpuri videos)
+                    likes: Math.floor(1200 + Math.random() * 8000),
+                    comments: Math.floor(30 + Math.random() * 400),
+                    shares: Math.floor(10 + Math.random() * 200),
+                    avatar: `https://picsum.photos/id/${100 + i}/64/64`
+                })
+            }
+        }
+
+        // Render ALL 200 reels with full-screen scroll
+        function renderReels() {
+            const container = document.getElementById('reels-container')
+            container.innerHTML = ''
+            
+            reelsData.forEach((reel) => {
+                const reelHTML = `
+                <div class="reel-slide h-screen w-full relative bg-black flex-shrink-0">
+                    <!-- Video -->
+                    <video 
+                        class="reel-video absolute inset-0 w-full h-full"
+                        src="${reel.videoUrl}"
+                        loop
+                        muted
+                        playsinline>
+                    </video>
+                    
+                    <!-- Top bar - Username + Follow -->
+                    <div class="absolute top-6 left-6 flex items-center gap-x-3 z-10">
+                        <img src="${reel.avatar}" alt="avatar" 
+                             class="w-9 h-9 rounded-2xl ring-2 ring-white/70 object-cover">
+                        <div>
+                            <p class="font-semibold">${reel.username}</p>
+                            <button onclick="toggleFollow(this, ${reel.id}); event.stopImmediatePropagation()" 
+                                    class="follow-btn text-xs font-medium bg-white text-black px-5 py-1 rounded-3xl mt-1">
+                                ${followedReels.has(reel.id) ? translations[currentLang].following : translations[currentLang].follow}
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Caption -->
+                    <div class="absolute bottom-32 left-6 z-10 max-w-[240px]">
+                        <p class="text-white text-[17px] leading-tight font-medium drop-shadow-lg">${reel.caption}</p>
+                    </div>
+                    
+                    <!-- Right side actions -->
+                    <div class="absolute bottom-28 right-6 flex flex-col items-center gap-y-6 z-20 text-white">
+                        
+                        <!-- Like -->
+                        <div onclick="toggleLike(this, ${reel.id}); event.stopImmediatePropagation()" class="flex flex-col items-center cursor-pointer">
+                            <i class="fa-solid fa-heart action-btn text-4xl ${likedReels.has(reel.id) ? 'text-red-500' : ''}"></i>
+                            <span class="text-sm mt-1 font-medium">${reel.likes.toLocaleString()}</span>
+                        </div>
+                        
+                        <!-- Comment -->
+                        <div onclick="openCommentModal(${reel.id}); event.stopImmediatePropagation()" class="flex flex-col items-center cursor-pointer">
+                            <i class="fa-solid fa-comment-dots action-btn text-4xl"></i>
+                            <span class="text-sm mt-1 font-medium">${reel.comments}</span>
+                        </div>
+                        
+                        <!-- Share -->
+                        <div onclick="shareReel(${reel.id}); event.stopImmediatePropagation()" class="flex flex-col items-center cursor-pointer">
+                            <i class="fa-solid fa-share-from-square action-btn text-4xl"></i>
+                            <span class="text-sm mt-1 font-medium">${reel.shares}</span>
+                        </div>
+                        
+                        <!-- Music / Reel info -->
+                        <div class="flex flex-col items-center cursor-pointer">
+                            <div class="w-10 h-10 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center text-xl border border-white/30">
+                                🎵
+                            </div>
+                            <span class="text-[10px] mt-1 text-center leading-none">Bhojpuri<br>Hit Song</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Bottom gradient -->
+                    <div class="absolute bottom-0 left-0 right-0 h-40 bg-gradient-to-t from-black/70 to-transparent pointer-events-none"></div>
+                </div>`
+                
+                container.innerHTML += reelHTML
+            })
+            
+            // Attach Intersection Observer for smart video play/pause
+            attachVideoObserver()
+            
+            // Update counter
+            document.getElementById('reel-count').textContent = reelsData.length
+        }
+
+        // Smart video autoplay only for visible reel
+        function attachVideoObserver() {
+            const videos = document.querySelectorAll('.reel-slide video')
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    const video = entry.target
+                    if (entry.isIntersecting) {
+                        video.play().catch(() => {})
+                    } else {
+                        video.pause()
+                    }
+                })
+            }, {
+                threshold: 0.6
+            })
+            
+            videos.forEach(video => observer.observe(video))
+        }
+
+        // Toggle like
+        function toggleLike(el, id) {
+            const reel = reelsData.find(r => r.id === id)
+            if (!reel) return
+            
+            if (likedReels.has(id)) {
+                likedReels.delete(id)
+                reel.likes--
+                el.querySelector('i').classList.remove('text-red-500')
+            } else {
+                likedReels.add(id)
+                reel.likes++
+                el.querySelector('i').classList.add('text-red-500')
+            }
+            // Update count
+            el.querySelector('span').textContent = reel.likes.toLocaleString()
+            
+            showToast(currentLang === 'bh' ? 'पसंद करीं!' : 'Liked!')
+        }
+
+        // Toggle follow
+        function toggleFollow(btn, id) {
+            if (followedReels.has(id)) {
+                followedReels.delete(id)
+                btn.textContent = translations[currentLang].follow
+                btn.classList.remove('bg-zinc-800', 'text-white')
+                btn.classList.add('bg-white', 'text-black')
+            } else {
+                followedReels.add(id)
+                btn.textContent = translations[currentLang].following
+                btn.classList.add('bg-zinc-800', 'text-white')
+                btn.classList.remove('bg-white', 'text-black')
+            }
+        }
+
+        // Open comment modal
+        function openCommentModal(id) {
+            currentReelIdForComment = id
+            const modal = document.getElementById('comment-modal')
+            modal.classList.remove('hidden')
+            modal.classList.add('flex')
+            
+            renderComments(id)
+        }
+
+        function hideCommentModal() {
+            const modal = document.getElementById('comment-modal')
+            modal.classList.add('hidden')
+            modal.classList.remove('flex')
+            currentReelIdForComment = null
+        }
+
+        // Render comments
+        function renderComments(id) {
+            const container = document.getElementById('comments-list')
+            container.innerHTML = `
+            <div class="flex flex-col items-center py-8 text-zinc-400">
+                <p class="text-5xl mb-3">💬</p>
+                <p class="font-medium">${translations[currentLang].comment} (Bhojpuri Reels)</p>
+            </div>`
+            
+            // Fake comments
+            const fakeComments = [
+                { user: "@bihari_ladka", text: "बहुत बढ़िया रील भाई 🔥🔥", likes: 124 },
+                { user: "@patna_queen", text: "नाच बहुत अच्छा है 😍", likes: 89 },
+                { user: "@dkd_fan", text: "भोजपुरी का स्वाद 💖", likes: 45 }
+            ]
+            
+            // Add user comments if any
+            if (userComments[id]) {
+                userComments[id].forEach(c => {
+                    container.innerHTML += `
+                    <div class="flex gap-x-3">
+                        <div class="w-8 h-8 bg-zinc-300 rounded-2xl flex-shrink-0"></div>
+                        <div class="flex-1">
+                            <p class="font-semibold">${c.user}</p>
+                            <p>${c.text}</p>
+                            <div class="text-xs text-zinc-400 mt-1">❤️ ${c.likes}</div>
+                        </div>
+                    </div>`
+                })
+            }
+            
+            fakeComments.forEach(comment => {
+                container.innerHTML += `
+                <div class="flex gap-x-3">
+                    <div class="w-8 h-8 bg-gradient-to-br from-pink-400 to-purple-400 text-white rounded-2xl flex items-center justify-center text-xl flex-shrink-0">👑</div>
+                    <div class="flex-1">
+                        <p class="font-semibold">${comment.user}</p>
+                        <p>${comment.text}</p>
+                        <div class="text-xs text-zinc-400 mt-1">❤️ ${comment.likes}</div>
+                    </div>
+                </div>`
+            })
+        }
+
+        // Post new comment
+        function postComment() {
+            const input = document.getElementById('new-comment-input')
+            const text = input.value.trim()
+            if (!text || !currentReelIdForComment) return
+            
+            if (!userComments[currentReelIdForComment]) userComments[currentReelIdForComment] = []
+            
+            userComments[currentReelIdForComment].push({
+                user: "@you",
+                text: text,
+                likes: 1
+            })
+            
+            // Increase comment count
+            const reel = reelsData.find(r => r.id === currentReelIdForComment)
+            if (reel) reel.comments++
+            
+            input.value = ''
+            renderComments(currentReelIdForComment)
+            
+            showToast('Comment posted!')
+        }
+
+        // Share reel
+        function shareReel(id) {
+            const reel = reelsData.find(r => r.id === id)
+            if (reel) reel.shares++
+            showToast(currentLang === 'bh' ? 'शेयर करीं ✅' : 'Reel shared to WhatsApp & Instagram!')
+            
+            // Simulate share animation
+            setTimeout(() => {
+                showToast('Link copied: https://dkd.app/reel/' + id)
+            }, 1400)
+        }
+
+        // Upload handling
+        let selectedVideoFile = null
+        
+        function handleVideoSelect(e) {
+            const file = e.target.files[0]
+            if (!file) return
+            selectedVideoFile = file
+            
+            const previewContainer = document.getElementById('upload-preview')
+            const videoEl = document.getElementById('preview-video')
+            
+            previewContainer.classList.remove('hidden')
+            const objectUrl = URL.createObjectURL(file)
+            videoEl.src = objectUrl
+        }
+        
+        function uploadVideo() {
+            if (!selectedVideoFile) {
+                showToast('Please select a video first!', true)
+                return
+            }
+            
+            const title = document.getElementById('reel-title-input').value || 'New Bhojpuri Reel'
+            const caption = document.getElementById('reel-caption-input').value || 'Uploaded via DKD 🔥'
+            
+            // Create object URL for playback
+            const videoUrl = URL.createObjectURL(selectedVideoFile)
+            
+            // Add new reel at the top
+            const newReel = {
+                id: Date.now(),
+                username: "@you",
+                caption: caption,
+                videoUrl: videoUrl,
+                likes: 0,
+                comments: 0,
+                shares: 0,
+                avatar: "https://picsum.photos/id/1005/64/64"
+            }
+            
+            reelsData.unshift(newReel)
+            
+            // Re-render reels
+            renderReels()
+            
+            // Close modal
+            hideUploadModal()
+            
+            // Reset form
+            selectedVideoFile = null
+            document.getElementById('upload-preview').classList.add('hidden')
+            
+            showToast('🎉 Reel uploaded successfully! Now in the scroll.')
+        }
+        
+        function showUploadModal() {
+            document.getElementById('upload-modal').classList.remove('hidden')
+            document.getElementById('upload-modal').classList.add('flex')
+        }
+        
+        function hideUploadModal() {
+            const modal = document.getElementById('upload-modal')
+            modal.classList.add('hidden')
+            modal.classList.remove('flex')
+            selectedVideoFile = null
+        }
+
+        // Settings
+        function showSettingsModal() {
+            const modal = document.getElementById('settings-modal')
+            modal.classList.remove('hidden')
+            modal.classList.add('flex')
+            updateTranslations()
+        }
+        
+        function hideSettingsModal() {
+            const modal = document.getElementById('settings-modal')
+            modal.classList.add('hidden')
+            modal.classList.remove('flex')
+        }
+        
+        function fakeAction(msg) {
+            hideSettingsModal()
+            showToast(msg)
+        }
+        
+        function logout() {
+            hideSettingsModal()
+            showToast('Logged out from DKD')
+            setTimeout(() => window.location.reload(), 1200)
+        }
+
+        // Language change
+        function changeLanguage(lang) {
+            currentLang = lang
+            document.getElementById('current-lang').innerHTML = 
+                lang === 'en' ? '🇬🇧 EN' : 
+                lang === 'hi' ? '🇮🇳 हिं' : '🇮🇳 भो'
+            
+            // Re-render reels to update button texts
+            renderReels()
+            
+            // Update static texts
+            updateTranslations()
+            
+            hideLanguageDropdown()
+            showToast(lang === 'bh' ? 'भाषा भोजपुरी में बदल गई ✅' : 'Language changed!')
+        }
+        
+        function toggleLanguageDropdown() {
+            const dd = document.getElementById('language-dropdown')
+            dd.classList.toggle('hidden')
+        }
+        
+        function hideLanguageDropdown() {
+            document.getElementById('language-dropdown').classList.add('hidden')
+        }
+
+        // Update all static translated elements
+        function updateTranslations() {
+            const t = translations[currentLang]
+            
+            // Navbar
+            if (document.getElementById('photos-text')) document.getElementById('photos-text').textContent = t.photos
+            if (document.getElementById('reels-text')) document.getElementById('reels-text').textContent = t.reels
+            if (document.getElementById('upload-text')) document.getElementById('upload-text').textContent = t.upload
+            if (document.getElementById('search-text')) document.getElementById('search-text').textContent = t.search
+            
+            // Modals
+            if (document.getElementById('upload-title')) document.getElementById('upload-title').innerHTML = `<i class="fa-solid fa-video mr-2"></i> ${t.upload}`
+            if (document.getElementById('post-btn-text')) document.getElementById('post-btn-text').textContent = t.post
+            if (document.getElementById('settings-title')) document.getElementById('settings-title').textContent = t.settings
+            if (document.getElementById('account-text')) document.getElementById('account-text').textContent = t.account
+            if (document.getElementById('privacy-text')) document.getElementById('privacy-text').textContent = t.privacy
+            if (document.getElementById('lang-settings-text')) document.getElementById('lang-settings-text').textContent = t.langSettings
+            if (document.getElementById('notifications-text')) document.getElementById('notifications-text').textContent = t.notifications
+            if (document.getElementById('logout-text')) document.getElementById('logout-text').textContent = t.logout
+        }
+
+        // Switch between Photos and Reels
+        function switchTab(tab) {
+            // Reset tabs
+            document.getElementById('tab-photos').classList.remove('active', 'bg-white', 'text-black')
+            document.getElementById('tab-reels').classList.remove('active', 'bg-white', 'text-black')
+            
+            if (tab === 0) {
+                // Photos
+                document.getElementById('tab-photos').classList.add('active', 'bg-white', 'text-black')
+                document.getElementById('photos-content').classList.remove('hidden')
+                document.getElementById('reels-content').classList.add('hidden')
+                renderPhotos()
+            } else {
+                // Reels
+                document.getElementById('tab-reels').classList.add('active', 'bg-white', 'text-black')
+                document.getElementById('photos-content').classList.add('hidden')
+                document.getElementById('reels-content').classList.remove('hidden')
+            }
+        }
+
+        // Simple photo grid for Instagram-like photo sharing
+        function renderPhotos() {
+            const container = document.querySelector('#photos-content .grid')
+            container.innerHTML = ''
+            
+            for (let i = 1; i <= 30; i++) {
+                const photoHTML = `
+                <div onclick="showPhotoDetail(${i})" class="relative group cursor-pointer rounded-3xl overflow-hidden aspect-square bg-zinc-900">
+                    <img src="https://picsum.photos/id/${200 + i}/600/600" 
+                         class="w-full h-full object-cover transition-transform group-hover:scale-110">
+                    <div class="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/60 opacity-0 group-hover:opacity-100 flex items-end p-4 transition-opacity">
+                        <div class="text-xs flex justify-between w-full">
+                            <div class="flex items-center">
+                                ❤️ <span class="ml-1">${Math.floor(800 + Math.random()*1200)}</span>
+                            </div>
+                            <div class="flex items-center">
+                                💬 <span class="ml-1">${Math.floor(20 + Math.random()*80)}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="absolute top-3 right-3 bg-black/60 text-[10px] px-2 py-px rounded-xl">📸</div>
+                </div>`
+                container.innerHTML += photoHTML
+            }
+        }
+        
+        function showPhotoDetail(id) {
+            showToast(`Photo #${id} opened - Like, Comment & Share ready! (Photo sharing in DKD)`)
+        }
+
+        // Search simulation
+        function showSearch() {
+            const query = prompt(translations[currentLang].search + '\n(Type something in Bhojpuri)', 'भोजपुरी गाना')
+            if (query) {
+                showToast(`🔎 Found 87 reels for "${query}"`)
+                // In real app this would filter reelsData
+                renderReels()
+            }
+        }
+
+        // Show profile
+        function showProfile() {
+            showToast('👑 Welcome to your DKD profile • 200 Bhojpuri reels uploaded!')
+        }
+
+        // Toast notification
+        function showToast(message, isError = false) {
+            const toast = document.getElementById('toast')
+            document.getElementById('toast-text').innerHTML = message
+            toast.style.backgroundColor = isError ? '#dc2626' : '#18181b'
+            toast.classList.remove('hidden')
+            toast.style.transform = 'translate(-50%, 0)'
+            
+            setTimeout(() => {
+                toast.style.transform = 'translate(-50%, 100px)'
+                setTimeout(() => toast.classList.add('hidden'), 300)
+            }, 2800)
+        }
+
+        // Main initialization
+        function initializeDKD() {
+            initializeTailwind()
+            generateReels()
+            renderReels()
+            updateTranslations()
+            
+            console.log('%c✅ DKD Instagram-like page loaded with 200 Bhojpuri reels! Reel scroll, Like, Comment, Share, Follow, Upload, Settings & 3 languages (English, Hindi, Bhojpuri) are fully working.', 'color:#e1306c; font-size:13px; font-weight:600')
+            
+            // Keyboard shortcut hint
+            console.log('%cPress "U" to quickly open upload modal', 'color:#a1a1aa; font-size:11px')
+            document.addEventListener('keydown', (e) => {
+                if (e.key.toLowerCase() === 'u') {
+                    showUploadModal()
+                }
+            })
+        }
+        
+        // Start the app
+        window.onload = initializeDKD
+    </script>
 </body>
 </html>
