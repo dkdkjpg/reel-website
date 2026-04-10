@@ -1,867 +1,150 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>dkd • Reels & Photos</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Playfair+Display:wght@700&display=swap');
-        
-        :root {
-            --tw-color-primary: #ff2d55;
-        }
-        
-        * {
-            scrollbar-width: thin;
-            scrollbar-color: #ff2d55 #1a1a1a;
-        }
-        
-        .reel-container {
-            scroll-snap-type: y mandatory;
-            -webkit-overflow-scrolling: touch;
-        }
-        
-        .reel-card {
-            scroll-snap-align: start;
-            height: 100vh;
-            position: relative;
-        }
-        
-        .video-player {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-        
-        .overlay {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background: linear-gradient(to top, rgba(0,0,0,0.85), transparent);
-            padding: 60px 20px 30px;
-        }
-        
-        .heart-liked {
-            animation: pop 0.3s ease;
-        }
-        
-        @keyframes pop {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.4); }
-            100% { transform: scale(1); }
-        }
-        
-        .nav-link {
-            transition: all 0.2s ease;
-        }
-        
-        .verified {
-            animation: verifiedPulse 2s infinite;
-        }
-    </style>
-</head>
-<body class="bg-black text-white font-sans">
-    <!-- TOP NAV -->
-    <nav class="fixed top-0 left-0 right-0 z-50 bg-black/90 backdrop-blur-lg border-b border-white/10">
-        <div class="max-w-screen-xl mx-auto px-4 h-14 flex items-center justify-between">
-            
-            <!-- Logo -->
-            <div class="flex items-center gap-2">
-                <div class="w-9 h-9 bg-gradient-to-br from-pink-500 to-violet-600 rounded-2xl flex items-center justify-center text-2xl shadow-lg">📸</div>
-                <h1 onclick="navigateTo('home')" class="text-3xl font-bold tracking-tighter cursor-pointer" style="font-family: 'Playfair Display', serif;">dkd</h1>
-                <div class="flex items-center text-[10px] font-semibold bg-white text-black px-1.5 py-px rounded leading-none mt-1 verified">✓ OFFICIAL</div>
-            </div>
+generator client {
+  provider = "prisma-client-js"
+}
 
-            <!-- Search -->
-            <div onclick="showSearch()" class="hidden md:flex items-center bg-white/10 hover:bg-white/20 transition-colors rounded-3xl px-5 py-1.5 text-sm cursor-pointer w-80">
-                <span class="text-white/60">🔎</span>
-                <input id="search-input" 
-                       onkeyup="if(event.key==='Enter') searchReels()"
-                       type="text" 
-                       placeholder="Search reels, users, #bhojpuri..." 
-                       class="bg-transparent outline-none flex-1 ml-3 text-sm placeholder:text-white/40">
-            </div>
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
 
-            <!-- Desktop Actions -->
-            <div class="hidden md:flex items-center gap-6 text-xl">
-                <button onclick="navigateTo('home')" class="nav-link flex items-center gap-1 hover:text-[#ff2d55]">
-                    <span class="text-2xl">🏠</span>
-                    <span id="nav-home" class="text-sm font-medium">Home</span>
-                </button>
-                
-                <button onclick="showUploadModal()" 
-                        class="nav-link flex items-center gap-1 hover:text-[#ff2d55] bg-white/10 hover:bg-white/20 px-4 h-9 rounded-3xl text-sm font-semibold">
-                    <span class="text-2xl">📤</span>
-                    <span id="nav-upload">Upload Reel</span>
-                </button>
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  username     String   @unique
+  passwordHash String
+  displayName  String
+  bio          String? 
+  avatarUrl    String?
+  isVerified   Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
-                <button onclick="navigateTo('profile')" class="nav-link flex items-center gap-1 hover:text-[#ff2d55]">
-                    <span class="text-2xl">👤</span>
-                    <span id="nav-profile" class="text-sm font-medium">Profile</span>
-                </button>
+  reels        Reel[]
+  likes        Like[]
+  comments     Comment[]
+  following    Follow[] @relation("following")
+  followers    Follow[] @relation("followers")
+}
 
-                <!-- Language Selector -->
-                <div class="relative group">
-                    <button onclick="toggleLanguageMenu()" 
-                            class="flex items-center gap-1 text-sm font-medium px-3 py-1 rounded-3xl bg-white/10 hover:bg-white/20 transition-colors">
-                        <span id="current-lang-flag">🇬🇧</span>
-                        <span id="current-lang-name">English</span>
-                        <span class="text-xs">▼</span>
-                    </button>
-                    
-                    <div id="language-menu" onclick="if(event.target.id==='language-menu')hideLanguageMenu()" 
-                         class="hidden group-hover:block absolute right-0 mt-2 w-48 bg-zinc-900 rounded-3xl shadow-2xl py-2 z-50 border border-white/10">
-                        <div onclick="changeLanguage('en')" class="px-6 py-3 hover:bg-white/10 flex items-center gap-3 cursor-pointer">
-                            🇬🇧 <span>English</span>
-                        </div>
-                        <div onclick="changeLanguage('hi')" class="px-6 py-3 hover:bg-white/10 flex items-center gap-3 cursor-pointer">
-                            🇮🇳 <span>Hindi (हिन्दी)</span>
-                        </div>
-                        <div onclick="changeLanguage('bho')" class="px-6 py-3 hover:bg-white/10 flex items-center gap-3 cursor-pointer">
-                            🇮🇳 <span>Bhojpuri (भोजपुरी)</span>
-                        </div>
-                    </div>
-                </div>
+model Reel {
+  id          String    @id @default(cuid())
+  authorId    String
+  author      User      @relation(fields: [authorId], references: [id])
+  videoUrl    String
+  thumbUrl    String?
+  title       String?
+  caption     String?
+  language    String    // "en" | "hi" | "bho"
+  durationSec Int
+  createdAt   DateTime  @default(now())
 
-                <!-- Settings -->
-                <button onclick="showSettingsModal()" class="text-2xl hover:text-[#ff2d55] transition-colors">⚙️</button>
+  likes       Like[]
+  comments    Comment[]
+}
 
-                <!-- Profile pic / Login status -->
-                <div onclick="toggleProfileMenu()" class="flex items-center cursor-pointer">
-                    <div id="user-avatar" class="w-8 h-8 bg-gradient-to-br from-pink-400 to-violet-500 rounded-2xl flex items-center justify-center text-xl shadow-inner">👤</div>
-                    <span id="username-display" class="ml-2 text-sm font-medium hidden md:block"></span>
-                </div>
-            </div>
+model Like {
+  id        String   @id @default(cuid())
+  userId    String
+  reelId    String
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id])
+  reel      Reel     @relation(fields: [reelId], references: [id])
 
-            <!-- Mobile bottom nav will be added later -->
-        </div>
-    </nav>
+  @@unique([userId, reelId])
+}
 
-    <!-- MAIN CONTENT AREA -->
-    <div class="pt-14 min-h-screen">
-        
-        <!-- HOME / REELS FEED -->
-        <div id="home-screen" class="reel-container max-w-[500px] mx-auto overflow-y-auto h-[calc(100vh-56px)] snap-y snap-mandatory scroll-smooth" style="scrollbar-width: none;">
-            <!-- Reels will be dynamically injected here by JavaScript -->
-        </div>
+model Comment {
+  id        String   @id @default(cuid())
+  userId    String
+  reelId    String
+  content   String
+  parentId  String?
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id])
+  reel      Reel     @relation(fields: [reelId], references: [id])
 
-        <!-- PROFILE SCREEN -->
-        <div id="profile-screen" class="hidden max-w-screen-xl mx-auto px-4 py-8">
-            <div class="flex flex-col items-center">
-                <div id="profile-avatar-big" class="w-28 h-28 bg-gradient-to-br from-pink-400 to-violet-500 rounded-3xl flex items-center justify-center text-6xl mb-4 shadow-2xl"></div>
-                <h2 id="profile-name" class="text-2xl font-semibold"></h2>
-                <p id="profile-username" class="text-white/60">@username</p>
-                
-                <div class="flex gap-8 mt-6 text-center">
-                    <div>
-                        <div id="profile-following" class="text-3xl font-bold">0</div>
-                        <div class="text-xs text-white/50">Following</div>
-                    </div>
-                    <div>
-                        <div id="profile-followers" class="text-3xl font-bold">0</div>
-                        <div class="text-xs text-white/50">Followers</div>
-                    </div>
-                    <div>
-                        <div id="profile-likes-total" class="text-3xl font-bold">0</div>
-                        <div class="text-xs text-white/50">Total Likes</div>
-                    </div>
-                </div>
+  @@index([reelId])
+}
 
-                <button onclick="logout()" 
-                        class="mt-8 px-8 py-3 bg-white/10 hover:bg-white/20 rounded-3xl text-sm font-semibold flex items-center gap-2">
-                    🚪 Logout
-                </button>
+model Follow {
+  id           String   @id @default(cuid())
+  followerId   String
+  followingId  String
+  createdAt    DateTime @default(now())
 
-                <h3 class="mt-12 text-lg font-semibold mb-4 w-full max-w-md">Your Uploaded Reels</h3>
-                <div id="user-reels-grid" class="grid grid-cols-3 gap-2 w-full max-w-2xl">
-                    <!-- Dynamic user reels -->
-                </div>
-            </div>
-        </div>
-    </div>
+  follower     User     @relation("following", fields: [followerId], references: [id])
+  following    User     @relation("followers", fields: [followingId], references: [id])
 
-    <!-- UPLOAD MODAL -->
-    <div onclick="if(event.target.id==='upload-modal')hideUploadModal()" 
-         id="upload-modal"
-         class="hidden fixed inset-0 bg-black/80 z-[9999] flex items-end md:items-center justify-center">
-        <div onclick="event.stopImmediatePropagation()" 
-             class="bg-white text-black w-full md:w-[480px] md:rounded-3xl rounded-t-3xl p-6">
-            <h2 id="upload-title" class="text-2xl font-semibold mb-6 text-center">Upload New Reel</h2>
-            
-            <div class="border-2 border-dashed border-pink-400 rounded-3xl p-8 text-center mb-6">
-                <input type="file" id="video-upload-input" accept="video/*" class="hidden">
-                <button onclick="document.getElementById('video-upload-input').click()" 
-                        class="mx-auto flex flex-col items-center">
-                    <div class="text-6xl mb-3">📹</div>
-                    <p class="font-semibold">Select video (1 sec - 10 min)</p>
-                    <p class="text-xs text-zinc-500 mt-1">MP4 • MOV • Max 500MB</p>
-                </button>
-                <p id="selected-file-name" class="text-sm mt-4 text-pink-600 font-medium"></p>
-            </div>
+  @@unique([followerId, followingId])
+}
+export const env = {
+  PORT: process.env.PORT || "4000",
+  DATABASE_URL: process.env.DATABASE_URL!,
+  JWT_SECRET: process.env.JWT_SECRET || "change-me",
+  S3_ENDPOINT: process.env.S3_ENDPOINT || "",import express from "express";
+import cors from "cors";
+import cookieParser from "cookie-parser";
+import { env } from "./env";
+import authRoutes from "./routes/auth";
+import userRoutes from "./routes/users";
+import reelsRoutes from "./routes/reels";
+import likesRoutes from "./routes/likes";
+import commentsRoutes from "./routes/comments";
+import followsRoutes from "./routes/follows";
 
-            <div class="space-y-4">
-                <input id="reel-caption" 
-                       type="text" 
-                       placeholder="Write a caption... (Bhojpuri / Hindi / English)" 
-                       class="w-full bg-zinc-100 rounded-2xl px-5 py-4 outline-none text-base">
-                
-                <button onclick="uploadVideo()" 
-                        class="w-full h-14 bg-gradient-to-r from-pink-500 to-violet-600 text-white rounded-3xl font-semibold text-lg flex items-center justify-center gap-2">
-                    <span>🚀</span> POST REEL TO DKD
-                </button>
-            </div>
-            
-            <button onclick="hideUploadModal()" class="mt-4 text-zinc-500 w-full">Cancel</button>
-        </div>
-    </div>
+const app = express();
 
-    <!-- COMMENT MODAL -->
-    <div onclick="if(event.target.id==='comment-modal')hideCommentModal()" 
-         id="comment-modal"
-         class="hidden fixed inset-0 bg-black/80 z-[9999] flex items-end">
-        <div onclick="event.stopImmediatePropagation()" 
-             class="bg-zinc-900 w-full md:max-w-[500px] md:mx-auto md:rounded-t-3xl rounded-t-3xl max-h-[80vh] flex flex-col">
-            <div class="px-6 py-4 border-b border-white/10 flex items-center justify-between">
-                <h3 id="comment-modal-title" class="font-semibold">Comments</h3>
-                <button onclick="hideCommentModal()" class="text-3xl leading-none">×</button>
-            </div>
-            
-            <div id="comments-list" class="flex-1 overflow-auto px-6 py-4 space-y-6">
-                <!-- JS injected comments -->
-            </div>
-            
-            <div class="p-4 border-t border-white/10 flex gap-3">
-                <input id="comment-input" 
-                       type="text" 
-                       placeholder="Add a comment..." 
-                       class="flex-1 bg-white/10 rounded-3xl px-6 py-4 outline-none text-white">
-                <button onclick="postComment()" 
-                        class="bg-[#ff2d55] text-white w-12 h-12 flex items-center justify-center rounded-3xl text-2xl">↑</button>
-            </div>
-        </div>
-    </div>
+app.use(cors({
+  origin: ["http://localhost:5173"],
+  credentials: true
+}));
+app.use(express.json({ limit: "20mb" }));
+app.use(cookieParser());
 
-    <!-- SETTINGS MODAL -->
-    <div onclick="if(event.target.id==='settings-modal')hideSettingsModal()" 
-         id="settings-modal"
-         class="hidden fixed inset-0 bg-black/80 z-[9999] flex items-center justify-center">
-        <div onclick="event.stopImmediatePropagation()" 
-             class="bg-zinc-900 w-full max-w-md mx-4 rounded-3xl p-6">
-            <h2 class="text-2xl font-semibold mb-6">Settings</h2>
-            
-            <div class="space-y-2">
-                <button onclick="changeLanguage('en');hideSettingsModal()" 
-                        class="w-full text-left flex justify-between items-center py-5 px-6 hover:bg-white/10 rounded-3xl">
-                    <span>🌍 Language</span>
-                    <span id="settings-current-lang" class="text-[#ff2d55]">English</span>
-                </button>
-                <button onclick="hideSettingsModal()" class="w-full text-left flex justify-between items-center py-5 px-6 hover:bg-white/10 rounded-3xl">
-                    <span>🔒 Privacy &amp; Safety</span>
-                </button>
-                <button onclick="hideSettingsModal()" class="w-full text-left flex justify-between items-center py-5 px-6 hover:bg-white/10 rounded-3xl">
-                    <span>🔔 Notifications</span>
-                </button>
-                <button onclick="logout();hideSettingsModal()" class="w-full text-left flex justify-between items-center py-5 px-6 hover:bg-white/10 rounded-3xl text-red-400">
-                    <span>🚪 Log out</span>
-                </button>
-            </div>
-            
-            <button onclick="hideSettingsModal()" class="mt-8 w-full h-12 bg-white/10 rounded-3xl">Close</button>
-        </div>
-    </div>
+app.get("/health", (_, res) => res.json({ ok: true }));
 
-    <!-- MINI PROFILE MENU (mobile + desktop) -->
-    <div onclick="if(event.target.id==='profile-menu')hideProfileMenu()" 
-         id="profile-menu"
-         class="hidden fixed top-14 right-4 bg-zinc-900 rounded-3xl shadow-2xl py-2 z-[9999] w-56 border border-white/10">
-        <div onclick="navigateTo('profile');hideProfileMenu()" class="px-6 py-4 hover:bg-white/10 cursor-pointer">👤 My Profile</div>
-        <div onclick="showUploadModal();hideProfileMenu()" class="px-6 py-4 hover:bg-white/10 cursor-pointer">📤 Upload Reel</div>
-        <div onclick="hideProfileMenu()" class="px-6 py-4 hover:bg-white/10 cursor-pointer">⭐ Verified dkd Official</div>
-        <div class="border-t border-white/10 my-2"></div>
-        <div onclick="logout();hideProfileMenu()" class="px-6 py-4 text-red-400 hover:bg-white/10 cursor-pointer">Log out</div>
-    </div>
+app.use("/api/auth", authRoutes);
+app.use("/api/users", userRoutes);
+app.use("/api/reels", reelsRoutes);
+app.use("/api/likes", likesRoutes);
+app.use("/api/comments", commentsRoutes);
+app.use("/api/follows", followsRoutes);
 
-    <!-- TOAST -->
-    <div id="toast" onclick="this.classList.add('hidden')" 
-         class="hidden fixed bottom-6 left-1/2 -translate-x-1/2 bg-[#ff2d55] text-white px-6 py-3 rounded-3xl shadow-2xl flex items-center gap-2 z-[99999]">
-    </div>
+app.listen(env.PORT, () => {
+  console.log(`dkd server listening on :${env.PORT}`);
+});
+import { Request, Response, NextFunction } from "express";
+import jwt from "jsonwebtoken";
+import { env } from "../env";
 
-    <script>
-        // =============== TAILWIND CONFIG ===============
-        function initializeTailwind() {
-            tailwind.config = {
-                content: [],
-                theme: {
-                    extend: {}
-                }
-            }
-        }
+export interface AuthReq extends Request { userId?: string; }
 
-        // =============== TRANSLATIONS ===============
-        const translations = {
-            en: {
-                home: "Home",
-                upload: "Upload Reel",
-                profile: "Profile",
-                settings: "Settings",
-                like: "Like",
-                comment: "Comment",
-                share: "Share",
-                follow: "Follow",
-                following: "Following",
-                verified: "Verified",
-                uploadTitle: "Upload New Reel",
-                post: "POST REEL TO DKD",
-                loginPrompt: "Log in to interact with reels",
-                currentLang: "English"
-            },
-            hi: {
-                home: "होम",
-                upload: "रील अपलोड करें",
-                profile: "प्रोफ़ाइल",
-                settings: "सेटिंग्स",
-                like: "पसंद",
-                comment: "टिप्पणी",
-                share: "शेयर",
-                follow: "फ़ॉलो करें",
-                following: "फ़ॉलोइंग",
-                verified: "सत्यापित",
-                uploadTitle: "नई रील अपलोड करें",
-                post: "डीकेडी पर पोस्ट करें",
-                loginPrompt: "रील्स के साथ इंटरैक्ट करने के लिए लॉग इन करें",
-                currentLang: "हिन्दी"
-            },
-            bho: {
-                home: "घर",
-                upload: "रील अपलोड करीं",
-                profile: "प्रोफाइल",
-                settings: "सेटिंग्स",
-                like: "पसंद",
-                comment: "कमेंट",
-                share: "शेयर",
-                follow: "फॉलो",
-                following: "फॉलोइंग",
-                verified: "वेरिफाइड",
-                uploadTitle: "नई रील अपलोड करीं",
-                post: "डीकेडी पर पोस्ट करीं",
-                loginPrompt: "रील्स के साथ बात करे खातिर लॉगिन करीं",
-                currentLang: "भोजपुरी"
-            }
-        }
+export function requireAuth(req: AuthReq, res: Response, next: NextFunction) {
+  const token = req.cookies?.token;
+  if (!token) return res.status(401).json({ error: "Unauthorized" });
+  try {
+    const decoded = jwt.verify(token, env.JWT_SECRET) as { userId: string };
+    req.userId = decoded.userId;
+    next();
+  } catch {
+    return res.status(401).json({ error: "Invalid token" });
+  }
+}
+import { Router } from "express";
+import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
+import { prisma } from "../prisma";
+import { env } from "../env";
 
-        let currentLang = 'en'
+const router = Router();
 
-        function changeLanguage(lang) {
-            currentLang = lang
-            document.getElementById('current-lang-flag').innerHTML = lang === 'en' ? '🇬🇧' : (lang === 'hi' ? '🇮🇳' : '🇮🇳')
-            document.getElementById('current-lang-name').textContent = translations[lang].currentLang
-            document.getElementById('settings-current-lang').textContent = translations[lang].currentLang
-            
-            // Update nav texts
-            document.getElementById('nav-home').textContent = translations[lang].home
-            document.getElementById('nav-upload').textContent = translations[lang].upload
-            document.getElementById('nav-profile').textContent = translations[lang].profile
-            
-            // Re-render feed to update button texts
-            if (document.getElementById('home-screen').style.display !== 'none') {
-                renderReels()
-            }
-            hideLanguageMenu()
-            showToast('भाषा बदल गई! / Language changed!', 2000)
-        }
+router.post("/signup", async (req, res) => {
+  const { email, username, password, displayName } = req.body;
+  if (!email || !username || !password) return res.status(400).json({ error: "Missing fields" });
+  const hash = await bcrypt.hash(password,
 
-        function toggleLanguageMenu() {
-            const menu = document.getElementById('language-menu')
-            menu.classList.toggle('hidden')
-        }
-        
-        function hideLanguageMenu() {
-            document.getElementById('language-menu').classList.add('hidden')
-        }
-
-        // =============== GLOBAL STATE ===============
-        let currentUser = null
-        let allReels = []
-        let userUploadedReels = []
-        
-        // Demo video URLs (cycled for 200 reels)
-        const demoVideoUrls = [
-            "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny_320x180_10s_1MB.mp4",
-            "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream_320x180_10s_1MB.mp4",
-            "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel_320x180_10s_1MB.mp4"
-        ]
-
-        // =============== INITIAL 200 BHOJPURI REELS ===============
-        function createInitialReels() {
-            allReels = []
-            for (let i = 1; i <= 200; i++) {
-                const videoIndex = (i - 1) % demoVideoUrls.length
-                allReels.push({
-                    id: i,
-                    username: i % 7 === 0 ? "dkdofficial" : `bhojpuri_star${i}`,
-                    isVerified: i % 7 === 0, // dkd official verified
-                    videoUrl: demoVideoUrls[videoIndex],
-                    caption: currentLang === 'bho' 
-                        ? `भोजपुरी गाना #${i} 🔥 नाचो रे!` 
-                        : (currentLang === 'hi' 
-                            ? `भोजपुरी गाना #${i} 🔥 नाचो!` 
-                            : `Bhojpuri Reel #${i} 🔥 Dance vibes!`),
-                    likes: 420 + Math.floor(Math.random() * 12000),
-                    likedByUser: false,
-                    comments: [],
-                    duration: `${Math.floor(Math.random()*9) + 1}:${Math.floor(Math.random()*59).toString().padStart(2, '0')}`,
-                    timestamp: new Date(Date.now() - i * 3600000).toISOString()
-                })
-            }
-        }
-
-        // =============== RENDER REELS (Vertical TikTok-style scroll) ===============
-        function renderReels(filteredReels = null) {
-            const container = document.getElementById('home-screen')
-            container.innerHTML = ''
-            
-            const reelsToShow = filteredReels || allReels
-            
-            reelsToShow.forEach((reel, index) => {
-                const reelHTML = `
-                <div class="reel-card bg-black snap-start flex flex-col" data-reel-id="${reel.id}">
-                    <!-- Video -->
-                    <video 
-                        id="video-${reel.id}"
-                        class="video-player"
-                        src="${reel.videoUrl}"
-                        loop
-                        muted
-                        playsinline
-                        preload="metadata">
-                    </video>
-                    
-                    <!-- Overlay -->
-                    <div class="overlay">
-                        <!-- User info -->
-                        <div class="flex items-center gap-3 mb-4">
-                            <div class="w-10 h-10 bg-gradient-to-br from-pink-400 to-violet-500 rounded-2xl flex items-center justify-center text-3xl flex-shrink-0">
-                                👤
-                            </div>
-                            <div class="flex-1">
-                                <div class="flex items-center gap-1">
-                                    <p class="font-semibold">@${reel.username}</p>
-                                    ${reel.isVerified ? `<span class="text-[#00f0ff] text-xl verified">✓</span>` : ''}
-                                </div>
-                                <p class="text-sm text-white/70 line-clamp-2">${reel.caption}</p>
-                            </div>
-                            ${reel.username !== (currentUser ? currentUser.username : '') ? 
-                                `<button onclick="toggleFollow(this, ${reel.id}); event.stopImmediatePropagation()" 
-                                        class="bg-white text-black text-sm font-semibold px-5 h-9 rounded-3xl text-nowrap">
-                                    ${translations[currentLang].follow}
-                                </button>` : ''}
-                        </div>
-                        
-                        <!-- Action buttons -->
-                        <div class="flex justify-between items-end">
-                            <div class="flex flex-col items-center gap-6 text-4xl">
-                                <!-- Like -->
-                                <div onclick="toggleLike(${reel.id}); event.stopImmediatePropagation()" class="flex flex-col items-center cursor-pointer">
-                                    <span id="like-icon-${reel.id}" class="transition-transform ${reel.likedByUser ? 'text-[#ff2d55] heart-liked' : 'text-white'}">❤️</span>
-                                    <span id="like-count-${reel.id}" class="text-sm mt-1 font-medium">${formatNumber(reel.likes)}</span>
-                                </div>
-                                
-                                <!-- Comment -->
-                                <div onclick="showCommentModal(${reel.id}); event.stopImmediatePropagation()" class="flex flex-col items-center cursor-pointer">
-                                    <span>💬</span>
-                                    <span class="text-sm mt-1 font-medium">${reel.comments.length}</span>
-                                </div>
-                                
-                                <!-- Share -->
-                                <div onclick="shareReel(${reel.id}); event.stopImmediatePropagation()" class="flex flex-col items-center cursor-pointer">
-                                    <span>📤</span>
-                                    <span class="text-xs mt-1">Share</span>
-                                </div>
-                            </div>
-                            
-                            <!-- Right side info -->
-                            <div class="text-right">
-                                <div class="bg-black/40 text-[10px] px-2 py-px rounded-full mb-2 inline-block">${reel.duration}</div>
-                                <div onclick="event.stopImmediatePropagation()" class="text-3xl">🎵</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>`
-                
-                container.innerHTML += reelHTML
-            })
-            
-            // Attach intersection observer for auto-play
-            setTimeout(attachVideoObservers, 100)
-        }
-
-        function attachVideoObservers() {
-            const videos = document.querySelectorAll('.reel-card video')
-            const observer = new IntersectionObserver((entries) => {
-                entries.forEach(entry => {
-                    const video = entry.target
-                    if (entry.isIntersecting) {
-                        video.play().catch(() => {})
-                    } else {
-                        video.pause()
-                    }
-                })
-            }, { threshold: 0.6 })
-            
-            videos.forEach(video => observer.observe(video))
-        }
-
-        function formatNumber(num) {
-            if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M'
-            if (num >= 10000) return (num / 1000).toFixed(0) + 'K'
-            return num
-        }
-
-        // =============== LIKE ===============
-        function toggleLike(id) {
-            if (!currentUser) {
-                showToast(translations[currentLang].loginPrompt, 3000)
-                return
-            }
-            
-            const reel = allReels.find(r => r.id === id)
-            if (!reel) return
-            
-            reel.likedByUser = !reel.likedByUser
-            if (reel.likedByUser) reel.likes++
-            else reel.likes--
-            
-            // Update DOM
-            const icon = document.getElementById(`like-icon-${id}`)
-            const count = document.getElementById(`like-count-${id}`)
-            
-            if (icon) {
-                icon.classList.toggle('text-[#ff2d55]')
-                icon.classList.toggle('heart-liked')
-            }
-            if (count) count.textContent = formatNumber(reel.likes)
-            
-            // Save to localStorage
-            localStorage.setItem('dkd_reels', JSON.stringify(allReels))
-        }
-
-        // =============== COMMENT ===============
-        let currentCommentReelId = null
-        
-        function showCommentModal(id) {
-            if (!currentUser) {
-                showToast(translations[currentLang].loginPrompt, 3000)
-                return
-            }
-            currentCommentReelId = id
-            const reel = allReels.find(r => r.id === id)
-            if (!reel) return
-            
-            const modal = document.getElementById('comment-modal')
-            modal.classList.remove('hidden')
-            modal.style.display = 'flex'
-            
-            renderComments(reel)
-        }
-        
-        function hideCommentModal() {
-            const modal = document.getElementById('comment-modal')
-            modal.classList.add('hidden')
-            modal.style.display = 'none'
-            currentCommentReelId = null
-        }
-        
-        function renderComments(reel) {
-            const container = document.getElementById('comments-list')
-            container.innerHTML = reel.comments.length ? '' : `<p class="text-white/40 text-center py-12">No comments yet.<br>Be the first to comment!</p>`
-            
-            reel.comments.forEach(c => {
-                container.innerHTML += `
-                <div class="flex gap-3">
-                    <div class="w-8 h-8 bg-zinc-700 rounded-2xl flex-shrink-0 flex items-center justify-center">👤</div>
-                    <div class="flex-1">
-                        <p><span class="font-semibold">@${c.user}</span> ${c.text}</p>
-                        <p class="text-xs text-white/50">${c.time}</p>
-                    </div>
-                </div>`
-            })
-        }
-        
-        function postComment() {
-            if (!currentCommentReelId || !currentUser) return
-            const input = document.getElementById('comment-input')
-            const text = input.value.trim()
-            if (!text) return
-            
-            const reel = allReels.find(r => r.id === currentCommentReelId)
-            reel.comments.unshift({
-                user: currentUser.username,
-                text: text,
-                time: 'just now'
-            })
-            
-            input.value = ''
-            renderComments(reel)
-            
-            // Also save to localStorage
-            localStorage.setItem('dkd_reels', JSON.stringify(allReels))
-        }
-
-        // =============== SHARE ===============
-        function shareReel(id) {
-            showToast('🔗 Link copied to clipboard! (dkd.app/reel/' + id + ')', 2500)
-            // In real app this would open share sheet
-        }
-
-        // =============== FOLLOW (demo) ===============
-        function toggleFollow(btn, reelId) {
-            if (!currentUser) {
-                showToast(translations[currentLang].loginPrompt, 3000)
-                return
-            }
-            if (btn.textContent === translations[currentLang].following) {
-                btn.textContent = translations[currentLang].follow
-                btn.classList.remove('bg-white/20', 'text-white')
-            } else {
-                btn.textContent = translations[currentLang].following
-                btn.classList.add('bg-white/20', 'text-white')
-            }
-        }
-
-        // =============== UPLOAD VIDEO ===============
-        function showUploadModal() {
-            if (!currentUser) {
-                showToast('Please log in to upload reels!', 3000)
-                showLoginPrompt()
-                return
-            }
-            document.getElementById('upload-modal').classList.remove('hidden')
-            document.getElementById('upload-modal').style.display = 'flex'
-            document.getElementById('upload-title').textContent = translations[currentLang].uploadTitle
-        }
-        
-        function hideUploadModal() {
-            document.getElementById('upload-modal').classList.add('hidden')
-            document.getElementById('upload-modal').style.display = 'none'
-            document.getElementById('selected-file-name').textContent = ''
-        }
-        
-        function uploadVideo() {
-            const fileInput = document.getElementById('video-upload-input')
-            const caption = document.getElementById('reel-caption').value || 'New Bhojpuri reel 🔥'
-            
-            if (!fileInput.files || !fileInput.files[0]) {
-                showToast('Please select a video first!', 2000)
-                return
-            }
-            
-            const file = fileInput.files[0]
-            
-            // Check duration constraint (1s - 10min) - simulated
-            if (file.size > 500 * 1024 * 1024) {
-                showToast('Video too large! Max 500MB', 2500)
-                return
-            }
-            
-            // Create object URL for preview
-            const objectUrl = URL.createObjectURL(file)
-            
-            // Add new reel
-            const newReel = {
-                id: Date.now(),
-                username: currentUser.username,
-                isVerified: false,
-                videoUrl: objectUrl,
-                caption: caption,
-                likes: 0,
-                likedByUser: false,
-                comments: [],
-                duration: 'NEW',
-                timestamp: new Date().toISOString()
-            }
-            
-            allReels.unshift(newReel)
-            userUploadedReels.unshift(newReel)
-            
-            // Save
-            localStorage.setItem('dkd_reels', JSON.stringify(allReels))
-            localStorage.setItem('dkd_user_reels_' + currentUser.username, JSON.stringify(userUploadedReels))
-            
-            hideUploadModal()
-            renderReels()
-            navigateTo('home')
-            
-            showToast('✅ Reel uploaded successfully! Now live on dkd', 3000)
-            
-            // Reset form
-            fileInput.value = ''
-            document.getElementById('reel-caption').value = ''
-        }
-
-        // =============== AUTH (Login / Signup) ===============
-        function showLoginPrompt() {
-            const username = prompt('👋 Create your dkd profile\n\nEnter username (any name):', 'bihari_boy_' + Math.floor(Math.random()*999))
-            if (!username) return
-            
-            currentUser = {
-                username: username.replace(/\s/g, '_').toLowerCase(),
-                avatar: '👤',
-                following: 42,
-                followers: 1280 + Math.floor(Math.random() * 3000),
-                totalLikes: 0
-            }
-            
-            localStorage.setItem('dkd_current_user', JSON.stringify(currentUser))
-            updateUIForLoggedInUser()
-            showToast('🎉 Welcome to dkd, @' + currentUser.username + '!', 2500)
-        }
-        
-        function updateUIForLoggedInUser() {
-            if (!currentUser) return
-            document.getElementById('username-display').textContent = '@' + currentUser.username
-            document.getElementById('username-display').classList.remove('hidden')
-            document.getElementById('user-avatar').innerHTML = currentUser.avatar
-        }
-        
-        function logout() {
-            currentUser = null
-            localStorage.removeItem('dkd_current_user')
-            document.getElementById('username-display').classList.add('hidden')
-            navigateTo('home')
-            showToast('👋 Logged out', 1500)
-        }
-        
-        // =============== PROFILE SCREEN ===============
-        function renderProfile() {
-            if (!currentUser) {
-                showLoginPrompt()
-                return
-            }
-            
-            document.getElementById('profile-name').textContent = currentUser.username.toUpperCase()
-            document.getElementById('profile-username').textContent = '@' + currentUser.username
-            document.getElementById('profile-avatar-big').innerHTML = currentUser.avatar
-            document.getElementById('profile-following').textContent = currentUser.following
-            document.getElementById('profile-followers').textContent = currentUser.followers
-            document.getElementById('profile-likes-total').textContent = formatNumber(currentUser.totalLikes || 12480)
-            
-            // Render user reels
-            const grid = document.getElementById('user-reels-grid')
-            grid.innerHTML = ''
-            
-            userUploadedReels.forEach(reel => {
-                grid.innerHTML += `
-                <div onclick="playSingleReel(${reel.id})" class="aspect-video bg-zinc-900 rounded-2xl overflow-hidden relative">
-                    <video src="${reel.videoUrl}" class="w-full h-full object-cover"></video>
-                    <div class="absolute bottom-2 right-2 bg-black/70 text-[10px] px-2 rounded">▶</div>
-                </div>`
-            })
-            
-            if (userUploadedReels.length === 0) {
-                grid.innerHTML = `<p class="col-span-3 text-center py-12 text-white/30">You haven't uploaded any reels yet.<br>Tap the + button above!</p>`
-            }
-        }
-        
-        function playSingleReel(id) {
-            // For demo just alert
-            alert('🎬 Playing your reel #' + id + '\n\n(In full app this would open full-screen player)')
-        }
-
-        // =============== NAVIGATION ===============
-        function navigateTo(screen) {
-            document.getElementById('home-screen').classList.add('hidden')
-            document.getElementById('profile-screen').classList.add('hidden')
-            
-            if (screen === 'home') {
-                document.getElementById('home-screen').classList.remove('hidden')
-            } else if (screen === 'profile') {
-                document.getElementById('profile-screen').classList.remove('hidden')
-                renderProfile()
-            }
-        }
-
-        function toggleProfileMenu() {
-            const menu = document.getElementById('profile-menu')
-            menu.classList.toggle('hidden')
-        }
-        
-        function hideProfileMenu() {
-            document.getElementById('profile-menu').classList.add('hidden')
-        }
-
-        function showSettingsModal() {
-            document.getElementById('settings-modal').classList.remove('hidden')
-            document.getElementById('settings-modal').style.display = 'flex'
-        }
-        
-        function hideSettingsModal() {
-            const modal = document.getElementById('settings-modal')
-            modal.classList.add('hidden')
-            modal.style.display = 'none'
-        }
-
-        function showSearch() {
-            const q = document.getElementById('search-input').value.toLowerCase().trim()
-            if (!q) {
-                renderReels()
-                return
-            }
-            const filtered = allReels.filter(r => 
-                r.caption.toLowerCase().includes(q) || 
-                r.username.toLowerCase().includes(q)
-            )
-            renderReels(filtered)
-        }
-        
-        function searchReels() {
-            showSearch()
-        }
-
-        // =============== TOAST ===============
-        function showToast(message, timeout = 2500) {
-            const toast = document.getElementById('toast')
-            toast.textContent = message
-            toast.classList.remove('hidden')
-            setTimeout(() => {
-                toast.classList.add('hidden')
-            }, timeout)
-        }
-
-        // =============== MAIN INIT ===============
-        function initializeDKD() {
-            initializeTailwind()
-            createInitialReels()
-            
-            // Load saved data from localStorage
-            const savedReels = localStorage.getItem('dkd_reels')
-            if (savedReels) {
-                allReels = JSON.parse(savedReels)
-            }
-            
-            const savedUser = localStorage.getItem('dkd_current_user')
-            if (savedUser) {
-                currentUser = JSON.parse(savedUser)
-                updateUIForLoggedInUser()
-            }
-            
-            // Load user uploaded reels if logged in
-            if (currentUser) {
-                const savedUserReels = localStorage.getItem('dkd_user_reels_' + currentUser.username)
-                if (savedUserReels) userUploadedReels = JSON.parse(savedUserReels)
-            }
-            
-            // Render the 200 Bhojpuri reels feed
-            renderReels()
-            
-            console.log('%c✅ dkd Instagram-like reel app ready! (200 Bhojpuri reels loaded)', 'color:#ff2d55; font-size:13px')
-            console.log('✅ Login with any username → Upload videos (1s-10min) → Vertical reel scroll → Like, Comment, Share, Follow')
-            console.log('✅ Verified dkd official account included • Language support: English, Hindi, Bhojpuri • Full local persistence')
-        }
-        
-        // Start the app
-        window.onload = initializeDKD
-    </script>
-</body>
-</html>
+  S3_BUCKET: process.env.S3_BUCKET || "dkd",
+  S3_ACCESS_KEY: process.env.S3_ACCESS_KEY || "",
+  S3_SECRET_KEY: process.env.S3_SECRET_KEY || "",
+  NODE_ENV: process.env.NODE_ENV || "development",
+};
