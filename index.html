@@ -3,169 +3,112 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>dkd - Short Video Sharing</title>
+    <title>dkd - Bhojpuri Reels</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         :root {
             --primary-bg: #000;
             --text-color: #fff;
             --accent-color: #0095f6;
-            --verified-color: #0095f6;
+            --verified-color: #3897f0;
+            --glass: rgba(255, 255, 255, 0.1);
         }
 
         body, html {
-            margin: 0;
-            padding: 0;
-            width: 100%;
-            height: 100%;
+            margin: 0; padding: 0; width: 100%; height: 100%;
             background-color: var(--primary-bg);
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
             color: var(--text-color);
             overflow: hidden;
         }
 
         /* --- Header --- */
         .header {
-            position: fixed;
-            top: 0;
-            width: 100%;
-            padding: 15px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            z-index: 100;
-            background: linear-gradient(to bottom, rgba(0,0,0,0.7), transparent);
+            position: fixed; top: 0; width: 100%; padding: 15px;
+            display: flex; justify-content: space-between; align-items: center;
+            z-index: 100; background: linear-gradient(to bottom, rgba(0,0,0,0.8), transparent);
         }
 
-        .logo {
-            font-size: 24px;
-            font-weight: bold;
-            letter-spacing: 1px;
-        }
+        .logo { font-size: 26px; font-weight: 800; letter-spacing: -1px; color: var(--text-color); }
 
-        .header-icons i {
-            font-size: 20px;
-            margin-left: 20px;
-            cursor: pointer;
+        /* --- Bottom Nav --- */
+        .bottom-nav {
+            position: fixed; bottom: 0; width: 100%; height: 60px;
+            background: #000; display: flex; justify-content: space-around;
+            align-items: center; border-top: 0.5px solid #333; z-index: 100;
         }
+        .bottom-nav i { font-size: 22px; cursor: pointer; }
 
-        /* --- Reel Container --- */
+        /* --- Reels Container --- */
         .reels-container {
-            width: 100%;
-            height: 100vh;
-            overflow-y: scroll;
-            scroll-snap-type: y mandatory;
-            scrollbar-width: none; /* Hide scrollbar Firefox */
+            width: 100%; height: 100vh;
+            overflow-y: scroll; scroll-snap-type: y mandatory;
+            scrollbar-width: none;
         }
-
-        .reels-container::-webkit-scrollbar { display: none; } /* Hide scrollbar Chrome */
+        .reels-container::-webkit-scrollbar { display: none; }
 
         .reel {
-            width: 100%;
-            height: 100vh;
-            scroll-snap-align: start;
-            position: relative;
-            background: #111;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            width: 100%; height: 100vh; scroll-snap-align: start;
+            position: relative; background: #000;
+            display: flex; align-items: center; justify-content: center;
         }
 
-        video {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
+        video { width: 100%; height: 100%; object-fit: cover; }
 
-        /* --- Overlay UI --- */
+        /* --- UI Overlay --- */
         .video-sidebar {
-            position: absolute;
-            right: 15px;
-            bottom: 100px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 20px;
+            position: absolute; right: 12px; bottom: 120px;
+            display: flex; flex-direction: column; align-items: center; gap: 18px;
         }
 
-        .action-btn {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            cursor: pointer;
+        .action-btn { display: flex; flex-direction: column; align-items: center; cursor: pointer; }
+        .action-btn i { font-size: 30px; text-shadow: 0 2px 5px rgba(0,0,0,0.5); }
+        .action-btn span { font-size: 12px; margin-top: 4px; font-weight: 600; }
+        .liked { color: #ff3040; animation: heartBeat 0.3s linear; }
+
+        @keyframes heartBeat {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.3); }
+            100% { transform: scale(1); }
         }
-
-        .action-btn i { font-size: 28px; margin-bottom: 5px; }
-        .action-btn span { font-size: 12px; }
-
-        .liked { color: #ff3040; }
 
         .video-data {
-            position: absolute;
-            bottom: 30px;
-            left: 15px;
-            width: 70%;
+            position: absolute; bottom: 80px; left: 15px; width: 75%;
+            text-shadow: 0 1px 3px rgba(0,0,0,0.8);
         }
 
-        .user-info {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 10px;
-        }
-
-        .user-info b { font-size: 16px; }
+        .user-info { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
+        .profile-pic { width: 35px; height: 35px; border-radius: 50%; border: 2px solid #fff; }
         .verified-badge { color: var(--verified-color); font-size: 14px; }
 
         .follow-btn {
-            border: 1px solid #fff;
-            padding: 4px 12px;
-            border-radius: 8px;
-            font-size: 12px;
-            font-weight: bold;
-            cursor: pointer;
+            border: 1px solid #fff; padding: 4px 14px; border-radius: 6px;
+            font-size: 13px; font-weight: bold; cursor: pointer; transition: 0.3s;
         }
+        .following { background: #fff; color: #000; }
 
-        /* --- Settings & Upload Modal --- */
+        /* --- Modals --- */
         .modal {
-            display: none;
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: #262626;
-            padding: 20px;
-            border-radius: 12px;
-            z-index: 1000;
-            width: 80%;
-            max-width: 400px;
+            display: none; position: fixed; top: 50%; left: 50%;
+            transform: translate(-50%, -50%); background: #262626;
+            padding: 25px; border-radius: 15px; z-index: 1001; width: 85%; max-width: 400px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         }
 
-        .modal h3 { margin-top: 0; }
+        .modal h3 { margin: 0 0 15px 0; font-size: 20px; }
         .modal select, .modal input {
-            width: 100%;
-            padding: 10px;
-            margin: 10px 0;
-            background: #333;
-            color: white;
-            border: none;
-            border-radius: 5px;
-        }
-
-        .close-modal {
-            float: right;
-            cursor: pointer;
+            width: 100%; padding: 12px; margin: 10px 0;
+            background: #3a3a3a; color: white; border: none; border-radius: 8px;
         }
 
         .overlay-bg {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.8);
-            z-index: 999;
+            display: none; position: fixed; top: 0; left: 0;
+            width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 1000;
+        }
+
+        .btn-main {
+            width: 100%; padding: 12px; background: var(--accent-color);
+            border: none; color: white; border-radius: 8px; font-weight: bold; margin-top: 10px;
         }
     </style>
 </head>
@@ -174,90 +117,114 @@
     <div class="header">
         <div class="logo">dkd</div>
         <div class="header-icons">
-            <i class="fas fa-plus-square" onclick="toggleModal('uploadModal')"></i>
+            <i class="fas fa-search" style="margin-right:15px"></i>
             <i class="fas fa-cog" onclick="toggleModal('settingsModal')"></i>
-            <i class="fas fa-user-circle" onclick="loginPrompt()"></i>
         </div>
     </div>
 
     <div class="reels-container" id="reels-feed">
         </div>
 
+    <div class="bottom-nav">
+        <i class="fas fa-home"></i>
+        <i class="fas fa-play-circle"></i>
+        <i class="fas fa-plus-square" onclick="toggleModal('uploadModal')" style="font-size: 28px;"></i>
+        <i class="fas fa-heart"></i>
+        <i class="fas fa-user-circle" onclick="loginPrompt()"></i>
+    </div>
+
     <div class="overlay-bg" id="overlay" onclick="closeAllModals()"></div>
 
     <div class="modal" id="settingsModal">
-        <span class="close-modal" onclick="closeAllModals()">&times;</span>
         <h3>Settings</h3>
-        <label>Select Language:</label>
+        <label>Language / भाषा / बोली:</label>
         <select onchange="changeLanguage(this.value)">
             <option value="en">English</option>
             <option value="hi">Hindi (हिन्दी)</option>
             <option value="bh">Bhojpuri (भोजपुरी)</option>
         </select>
+        <button class="btn-main" onclick="closeAllModals()">Done</button>
     </div>
 
     <div class="modal" id="uploadModal">
-        <span class="close-modal" onclick="closeAllModals()">&times;</span>
-        <h3>Upload Video (1s - 10m)</h3>
+        <h3>Upload Video</h3>
+        <p style="font-size:12px; color:#aaa;">Support: 1 second to 10 minutes</p>
         <input type="file" accept="video/*">
-        <button style="width:100%; padding:10px; background:var(--accent-color); border:none; color:white; border-radius:5px;">Upload to dkd</button>
+        <input type="text" placeholder="Write a caption...">
+        <button class="btn-main">Post to dkd</button>
     </div>
 
     <script>
-        // Language Dictionary
         const langData = {
-            en: { follow: "Follow", share: "Share", comment: "Comment" },
-            hi: { follow: "फॉलो करें", share: "शेयर", comment: "टिप्पणी" },
-            bh: { follow: "फॉलो करीं", share: "भेजीं", comment: "बताईं" }
+            en: { follow: "Follow", following: "Following", share: "Share", comment: "Comment" },
+            hi: { follow: "फॉलो करें", following: "फॉलो किया", share: "शेयर", comment: "टिप्पणी" },
+            bh: { follow: "फॉलो करीं", following: "जुड़ल बानी", share: "भेजीं", comment: "बताईं" }
         };
 
         let currentLang = 'en';
 
-        // Generate 200 Reels (Placeholder Logic)
+        // Generate Reels
         const container = document.getElementById('reels-feed');
+        const videoSources = [
+            "https://www.w3schools.com/html/mov_bbb.mp4", 
+            "https://www.w3schools.com/html/horse.mp4"
+        ];
+
         for (let i = 1; i <= 200; i++) {
             const reel = document.createElement('div');
             reel.className = 'reel';
             reel.innerHTML = `
-                <video loop onclick="this.paused ? this.play() : this.pause()">
-                    <source src="https://www.w3schools.com/html/mov_bbb.mp4" type="video/mp4">
+                <video loop preload="none" onclick="togglePlay(this)">
+                    <source src="${videoSources[i % 2]}" type="video/mp4">
                 </video>
                 <div class="video-sidebar">
                     <div class="action-btn" onclick="toggleLike(this)">
                         <i class="fas fa-heart"></i>
-                        <span>${Math.floor(Math.random() * 5000)}</span>
+                        <span>${Math.floor(Math.random() * 9000) + 100}</span>
                     </div>
                     <div class="action-btn">
                         <i class="fas fa-comment"></i>
                         <span class="lang-comment">Comment</span>
                     </div>
-                    <div class="action-btn">
+                    <div class="action-btn" onclick="shareVideo()">
                         <i class="fas fa-share"></i>
                         <span class="lang-share">Share</span>
                     </div>
                 </div>
                 <div class="video-data">
                     <div class="user-info">
+                        <img src="https://i.pravatar.cc/100?u=${i}" class="profile-pic">
                         <b>dkd_official</b>
                         <i class="fas fa-check-circle verified-badge"></i>
-                        <div class="follow-btn lang-follow">Follow</div>
+                        <div class="follow-btn lang-follow" onclick="toggleFollow(this)">Follow</div>
                     </div>
-                    <p>Bhojpuri Reel #${i} - Enjoy high quality content on dkd!</p>
+                    <p><b>#BhojpuriReel ${i}</b> - Welcome to the official dkd verified account! 🌟</p>
                 </div>
             `;
             container.appendChild(reel);
         }
 
-        // Logic Functions
-        function toggleLike(element) {
-            const icon = element.querySelector('i');
-            const span = element.querySelector('span');
-            let count = parseInt(span.innerText);
-            
+        // --- Functions ---
+
+        function togglePlay(v) { v.paused ? v.play() : v.pause(); }
+
+        function toggleLike(btn) {
+            const icon = btn.querySelector('i');
+            const span = btn.querySelector('span');
+            let val = parseInt(span.innerText);
             if (icon.classList.toggle('liked')) {
-                span.innerText = count + 1;
+                span.innerText = val + 1;
             } else {
-                span.innerText = count - 1;
+                span.innerText = val - 1;
+            }
+        }
+
+        function toggleFollow(btn) {
+            btn.classList.toggle('following');
+            if(btn.classList.contains('following')) {
+                btn.innerText = langData[currentLang].following;
+            } else {
+                btn.innerText = langData[currentLang].follow;
             }
         }
 
@@ -271,31 +238,312 @@
             document.querySelectorAll('.modal').forEach(m => m.style.display = 'none');
         }
 
-        function loginPrompt() {
-            let user = prompt("Enter username to login to dkd:");
-            if(user) alert("Welcome to dkd, " + user + "!");
-        }
-
         function changeLanguage(lang) {
             currentLang = lang;
-            document.querySelectorAll('.lang-follow').forEach(el => el.innerText = langData[lang].follow);
+            document.querySelectorAll('.lang-follow').forEach(el => {
+                el.innerText = el.classList.contains('following') ? langData[lang].following : langData[lang].follow;
+            });
             document.querySelectorAll('.lang-share').forEach(el => el.innerText = langData[lang].share);
             document.querySelectorAll('.lang-comment').forEach(el => el.innerText = langData[lang].comment);
             closeAllModals();
         }
 
-        // Auto-play video on scroll (Intersection Observer)
+        function shareVideo() {
+            alert("Link copied to clipboard! (Share on WhatsApp/Facebook)");
+        }
+
+        function loginPrompt() {
+            let user = prompt("Create Profile - Enter Name:");
+            if(user) alert("Account created for " + user + " on dkd!");
+        }
+
+        // Auto-play/pause logic
         const observer = new IntersectionObserver((entries) => {
             entries.forEach(entry => {
                 const video = entry.target.querySelector('video');
                 if (entry.isIntersecting) {
-                    video.play();
+                    video.play().catch(e => {}); // Play when visible
                 } else {
                     video.pause();
-                    video.currentTime = 0;
+                    video.currentTime = 0; // Reset when out of view
                 }
             });
-        }, { threshold: 0.8 });
+        }, { threshold: 0.7 });
+
+        document.querySelectorAll('.reel').forEach(reel => observer.observe(reel));
+    </script>
+</body>
+</html><!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>dkd - Bhojpuri Reels</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-bg: #000;
+            --text-color: #fff;
+            --accent-color: #0095f6;
+            --verified-color: #3897f0;
+            --glass: rgba(255, 255, 255, 0.1);
+        }
+
+        body, html {
+            margin: 0; padding: 0; width: 100%; height: 100%;
+            background-color: var(--primary-bg);
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            color: var(--text-color);
+            overflow: hidden;
+        }
+
+        /* --- Header --- */
+        .header {
+            position: fixed; top: 0; width: 100%; padding: 15px;
+            display: flex; justify-content: space-between; align-items: center;
+            z-index: 100; background: linear-gradient(to bottom, rgba(0,0,0,0.8), transparent);
+        }
+
+        .logo { font-size: 26px; font-weight: 800; letter-spacing: -1px; color: var(--text-color); }
+
+        /* --- Bottom Nav --- */
+        .bottom-nav {
+            position: fixed; bottom: 0; width: 100%; height: 60px;
+            background: #000; display: flex; justify-content: space-around;
+            align-items: center; border-top: 0.5px solid #333; z-index: 100;
+        }
+        .bottom-nav i { font-size: 22px; cursor: pointer; }
+
+        /* --- Reels Container --- */
+        .reels-container {
+            width: 100%; height: 100vh;
+            overflow-y: scroll; scroll-snap-type: y mandatory;
+            scrollbar-width: none;
+        }
+        .reels-container::-webkit-scrollbar { display: none; }
+
+        .reel {
+            width: 100%; height: 100vh; scroll-snap-align: start;
+            position: relative; background: #000;
+            display: flex; align-items: center; justify-content: center;
+        }
+
+        video { width: 100%; height: 100%; object-fit: cover; }
+
+        /* --- UI Overlay --- */
+        .video-sidebar {
+            position: absolute; right: 12px; bottom: 120px;
+            display: flex; flex-direction: column; align-items: center; gap: 18px;
+        }
+
+        .action-btn { display: flex; flex-direction: column; align-items: center; cursor: pointer; }
+        .action-btn i { font-size: 30px; text-shadow: 0 2px 5px rgba(0,0,0,0.5); }
+        .action-btn span { font-size: 12px; margin-top: 4px; font-weight: 600; }
+        .liked { color: #ff3040; animation: heartBeat 0.3s linear; }
+
+        @keyframes heartBeat {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.3); }
+            100% { transform: scale(1); }
+        }
+
+        .video-data {
+            position: absolute; bottom: 80px; left: 15px; width: 75%;
+            text-shadow: 0 1px 3px rgba(0,0,0,0.8);
+        }
+
+        .user-info { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
+        .profile-pic { width: 35px; height: 35px; border-radius: 50%; border: 2px solid #fff; }
+        .verified-badge { color: var(--verified-color); font-size: 14px; }
+
+        .follow-btn {
+            border: 1px solid #fff; padding: 4px 14px; border-radius: 6px;
+            font-size: 13px; font-weight: bold; cursor: pointer; transition: 0.3s;
+        }
+        .following { background: #fff; color: #000; }
+
+        /* --- Modals --- */
+        .modal {
+            display: none; position: fixed; top: 50%; left: 50%;
+            transform: translate(-50%, -50%); background: #262626;
+            padding: 25px; border-radius: 15px; z-index: 1001; width: 85%; max-width: 400px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        .modal h3 { margin: 0 0 15px 0; font-size: 20px; }
+        .modal select, .modal input {
+            width: 100%; padding: 12px; margin: 10px 0;
+            background: #3a3a3a; color: white; border: none; border-radius: 8px;
+        }
+
+        .overlay-bg {
+            display: none; position: fixed; top: 0; left: 0;
+            width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 1000;
+        }
+
+        .btn-main {
+            width: 100%; padding: 12px; background: var(--accent-color);
+            border: none; color: white; border-radius: 8px; font-weight: bold; margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="logo">dkd</div>
+        <div class="header-icons">
+            <i class="fas fa-search" style="margin-right:15px"></i>
+            <i class="fas fa-cog" onclick="toggleModal('settingsModal')"></i>
+        </div>
+    </div>
+
+    <div class="reels-container" id="reels-feed">
+        </div>
+
+    <div class="bottom-nav">
+        <i class="fas fa-home"></i>
+        <i class="fas fa-play-circle"></i>
+        <i class="fas fa-plus-square" onclick="toggleModal('uploadModal')" style="font-size: 28px;"></i>
+        <i class="fas fa-heart"></i>
+        <i class="fas fa-user-circle" onclick="loginPrompt()"></i>
+    </div>
+
+    <div class="overlay-bg" id="overlay" onclick="closeAllModals()"></div>
+
+    <div class="modal" id="settingsModal">
+        <h3>Settings</h3>
+        <label>Language / भाषा / बोली:</label>
+        <select onchange="changeLanguage(this.value)">
+            <option value="en">English</option>
+            <option value="hi">Hindi (हिन्दी)</option>
+            <option value="bh">Bhojpuri (भोजपुरी)</option>
+        </select>
+        <button class="btn-main" onclick="closeAllModals()">Done</button>
+    </div>
+
+    <div class="modal" id="uploadModal">
+        <h3>Upload Video</h3>
+        <p style="font-size:12px; color:#aaa;">Support: 1 second to 10 minutes</p>
+        <input type="file" accept="video/*">
+        <input type="text" placeholder="Write a caption...">
+        <button class="btn-main">Post to dkd</button>
+    </div>
+
+    <script>
+        const langData = {
+            en: { follow: "Follow", following: "Following", share: "Share", comment: "Comment" },
+            hi: { follow: "फॉलो करें", following: "फॉलो किया", share: "शेयर", comment: "टिप्पणी" },
+            bh: { follow: "फॉलो करीं", following: "जुड़ल बानी", share: "भेजीं", comment: "बताईं" }
+        };
+
+        let currentLang = 'en';
+
+        // Generate Reels
+        const container = document.getElementById('reels-feed');
+        const videoSources = [
+            "https://www.w3schools.com/html/mov_bbb.mp4", 
+            "https://www.w3schools.com/html/horse.mp4"
+        ];
+
+        for (let i = 1; i <= 200; i++) {
+            const reel = document.createElement('div');
+            reel.className = 'reel';
+            reel.innerHTML = `
+                <video loop preload="none" onclick="togglePlay(this)">
+                    <source src="${videoSources[i % 2]}" type="video/mp4">
+                </video>
+                <div class="video-sidebar">
+                    <div class="action-btn" onclick="toggleLike(this)">
+                        <i class="fas fa-heart"></i>
+                        <span>${Math.floor(Math.random() * 9000) + 100}</span>
+                    </div>
+                    <div class="action-btn">
+                        <i class="fas fa-comment"></i>
+                        <span class="lang-comment">Comment</span>
+                    </div>
+                    <div class="action-btn" onclick="shareVideo()">
+                        <i class="fas fa-share"></i>
+                        <span class="lang-share">Share</span>
+                    </div>
+                </div>
+                <div class="video-data">
+                    <div class="user-info">
+                        <img src="https://i.pravatar.cc/100?u=${i}" class="profile-pic">
+                        <b>dkd_official</b>
+                        <i class="fas fa-check-circle verified-badge"></i>
+                        <div class="follow-btn lang-follow" onclick="toggleFollow(this)">Follow</div>
+                    </div>
+                    <p><b>#BhojpuriReel ${i}</b> - Welcome to the official dkd verified account! 🌟</p>
+                </div>
+            `;
+            container.appendChild(reel);
+        }
+
+        // --- Functions ---
+
+        function togglePlay(v) { v.paused ? v.play() : v.pause(); }
+
+        function toggleLike(btn) {
+            const icon = btn.querySelector('i');
+            const span = btn.querySelector('span');
+            let val = parseInt(span.innerText);
+            if (icon.classList.toggle('liked')) {
+                span.innerText = val + 1;
+            } else {
+                span.innerText = val - 1;
+            }
+        }
+
+        function toggleFollow(btn) {
+            btn.classList.toggle('following');
+            if(btn.classList.contains('following')) {
+                btn.innerText = langData[currentLang].following;
+            } else {
+                btn.innerText = langData[currentLang].follow;
+            }
+        }
+
+        function toggleModal(id) {
+            document.getElementById('overlay').style.display = 'block';
+            document.getElementById(id).style.display = 'block';
+        }
+
+        function closeAllModals() {
+            document.getElementById('overlay').style.display = 'none';
+            document.querySelectorAll('.modal').forEach(m => m.style.display = 'none');
+        }
+
+        function changeLanguage(lang) {
+            currentLang = lang;
+            document.querySelectorAll('.lang-follow').forEach(el => {
+                el.innerText = el.classList.contains('following') ? langData[lang].following : langData[lang].follow;
+            });
+            document.querySelectorAll('.lang-share').forEach(el => el.innerText = langData[lang].share);
+            document.querySelectorAll('.lang-comment').forEach(el => el.innerText = langData[lang].comment);
+            closeAllModals();
+        }
+
+        function shareVideo() {
+            alert("Link copied to clipboard! (Share on WhatsApp/Facebook)");
+        }
+
+        function loginPrompt() {
+            let user = prompt("Create Profile - Enter Name:");
+            if(user) alert("Account created for " + user + " on dkd!");
+        }
+
+        // Auto-play/pause logic
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                const video = entry.target.querySelector('video');
+                if (entry.isIntersecting) {
+                    video.play().catch(e => {}); // Play when visible
+                } else {
+                    video.pause();
+                    video.currentTime = 0; // Reset when out of view
+                }
+            });
+        }, { threshold: 0.7 });
 
         document.querySelectorAll('.reel').forEach(reel => observer.observe(reel));
     </script>
