@@ -1,1 +1,303 @@
-{"sandbox_id": "9bc3b23f-af2e-4a09-ad19-378d47597884", "code": "# Create the ReelCard component - the heart of the Instagram-like experience\nreel_card_component = '''import React, { useState, useRef, useEffect } from 'react';\nimport { useTranslation } from '../i18n';\n\nexport default function ReelCard({ reel, index }) {\n  const [isPlaying, setIsPlaying] = useState(false);\n  const [isMuted, setIsMuted] = useState(true);\n  const [isLiked, setIsLiked] = useState(reel.isLiked);\n  const [likesCount, setLikesCount] = useState(reel.likesCount);\n  const [isFollowing, setIsFollowing] = useState(false);\n  const [showComments, setShowComments] = useState(false);\n  const [currentTime, setCurrentTime] = useState(0);\n  const [duration, setDuration] = useState(0);\n  \n  const videoRef = useRef(null);\n  const { t } = useTranslation();\n\n  // Auto play when video comes into view\n  useEffect(() => {\n    const observer = new IntersectionObserver(\n      (entries) => {\n        entries.forEach((entry) => {\n          if (entry.isIntersecting) {\n            videoRef.current?.play();\n            setIsPlaying(true);\n          } else {\n            videoRef.current?.pause();\n            setIsPlaying(false);\n          }\n        });\n      },\n      { threshold: 0.7 }\n    );\n\n    if (videoRef.current) {\n      observer.observe(videoRef.current);\n    }\n\n    return () => {\n      if (videoRef.current) {\n        observer.unobserve(videoRef.current);\n      }\n    };\n  }, []);\n\n  const handleLike = () => {\n    setIsLiked(!isLiked);\n    setLikesCount(prev => isLiked ? prev - 1 : prev + 1);\n  };\n\n  const handleFollow = () => {\n    setIsFollowing(!isFollowing);\n  };\n\n  const handleShare = () => {\n    if (navigator.share) {\n      navigator.share({\n        title: `dkd - ${reel.author.fullName}`,\n        text: reel.caption,\n        url: window.location.href\n      });\n    } else {\n      // Fallback: copy to clipboard\n      navigator.clipboard.writeText(window.location.href);\n      alert('Link copied to clipboard!');\n    }\n  };\n\n  const togglePlay = () => {\n    if (isPlaying) {\n      videoRef.current?.pause();\n    } else {\n      videoRef.current?.play();\n    }\n    setIsPlaying(!isPlaying);\n  };\n\n  const toggleMute = () => {\n    if (videoRef.current) {\n      videoRef.current.muted = !isMuted;\n      setIsMuted(!isMuted);\n    }\n  };\n\n  const formatTime = (time) => {\n    const minutes = Math.floor(time / 60);\n    const seconds = Math.floor(time % 60);\n    return `${minutes}:${seconds.toString().padStart(2, '0')}`;\n  };\n\n  const formatNumber = (num) => {\n    if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';\n    if (num >= 1000) return (num / 1000).toFixed(1) + 'K';\n    return num.toString();\n  };\n\n  return (\n    <div className=\"relative h-screen bg-black overflow-hidden\">\n      {/* Video Player */}\n      <video\n        ref={videoRef}\n        className=\"absolute inset-0 w-full h-full object-cover\"\n        loop\n        muted={isMuted}\n        poster={reel.thumbnailUrl}\n        onTimeUpdate={(e) => setCurrentTime(e.target.currentTime)}\n        onLoadedMetadata={(e) => setDuration(e.target.duration)}\n        onError={() => console.log('Video failed to load')}\n      >\n        {/* For demo, we'll use a placeholder video */}\n        <source src=\"https://sample-videos.com/zip/10/mp4/SampleVideo_360x240_1mb.mp4\" type=\"video/mp4\" />\n        Your browser does not support the video tag.\n      </video>\n\n      {/* Video Controls Overlay */}\n      <div \n        className=\"absolute inset-0 flex items-center justify-center z-10\"\n        onClick={togglePlay}\n      >\n        {!isPlaying && (\n          <div className=\"bg-black bg-opacity-50 rounded-full p-4\">\n            <div className=\"w-16 h-16 text-white flex items-center justify-center text-4xl\">\n              ▶️\n            </div>\n          </div>\n        )}\n      </div>\n\n      {/* Top Gradient Overlay */}\n      <div className=\"absolute top-0 left-0 right-0 h-24 bg-gradient-to-b from-black to-transparent z-20\" />\n\n      {/* Bottom Gradient Overlay */}\n      <div className=\"absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-black to-transparent z-20\" />\n\n      {/* Progress Bar */}\n      <div className=\"absolute bottom-0 left-0 right-0 h-1 bg-gray-600 z-30\">\n        <div \n          className=\"h-full bg-white transition-all duration-100\"\n          style={{ width: `${duration ? (currentTime / duration) * 100 : 0}%` }}\n        />\n      </div>\n\n      {/* Audio Toggle */}\n      <button\n        onClick={toggleMute}\n        className=\"absolute top-4 right-4 z-30 bg-black bg-opacity-50 rounded-full p-2 text-white\"\n      >\n        {isMuted ? '🔇' : '🔊'}\n      </button>\n\n      {/* Main Content Overlay */}\n      <div className=\"absolute bottom-20 left-0 right-0 p-4 z-30\">\n        <div className=\"flex items-end justify-between\">\n          {/* Left Content */}\n          <div className=\"flex-1 mr-4\">\n            {/* Author Info */}\n            <div className=\"flex items-center mb-3\">\n              <div className=\"w-12 h-12 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center mr-3\">\n                <span className=\"text-white font-bold\">\n                  {reel.author.username[0].toUpperCase()}\n                </span>\n              </div>\n              <div className=\"flex-1\">\n                <div className=\"flex items-center\">\n                  <h3 className=\"text-white font-bold mr-2\">@{reel.author.username}</h3>\n                  {reel.author.isVerified && (\n                    <span className=\"text-blue-400 text-lg\">✓</span>\n                  )}\n                </div>\n                <p className=\"text-gray-300 text-sm\">{reel.author.fullName}</p>\n              </div>\n              {!isFollowing && (\n                <button\n                  onClick={handleFollow}\n                  className=\"bg-white text-black px-4 py-1 rounded-full font-bold text-sm\"\n                >\n                  {t('post.follow')}\n                </button>\n              )}\n            </div>\n\n            {/* Caption */}\n            <p className=\"text-white mb-2 text-sm leading-relaxed\">\n              {reel.caption}\n            </p>\n\n            {/* Hashtags */}\n            <div className=\"flex flex-wrap gap-1 mb-3\">\n              {reel.hashtags?.map((tag, i) => (\n                <span key={i} className=\"text-blue-300 text-sm\">#{tag}</span>\n              ))}\n            </div>\n\n            {/* Stats */}\n            <div className=\"flex items-center space-x-4 text-white text-sm\">\n              <span>👁️ {formatNumber(reel.viewsCount)}</span>\n              <span>⏱️ {formatTime(currentTime)} / {formatTime(duration)}</span>\n              <span>🌐 {reel.language.toUpperCase()}</span>\n            </div>\n          </div>\n\n          {/* Right Actions */}\n          <div className=\"flex flex-col items-center space-y-4\">\n            {/* Like Button */}\n            <button\n              onClick={handleLike}\n              className=\"flex flex-col items-center space-y-1 transition-transform active:scale-110\"\n            >\n              <div className={`text-3xl ${isLiked ? 'text-red-500' : 'text-white'}`}>\n                {isLiked ? '❤️' : '🤍'}\n              </div>\n              <span className=\"text-white text-xs font-bold\">\n                {formatNumber(likesCount)}\n              </span>\n            </button>\n\n            {/* Comment Button */}\n            <button\n              onClick={() => setShowComments(true)}\n              className=\"flex flex-col items-center space-y-1\"\n            >\n              <div className=\"text-3xl text-white\">💬</div>\n              <span className=\"text-white text-xs font-bold\">\n                {formatNumber(reel.commentsCount)}\n              </span>\n            </button>\n\n            {/* Share Button */}\n            <button\n              onClick={handleShare}\n              className=\"flex flex-col items-center space-y-1\"\n            >\n              <div className=\"text-3xl text-white\">📤</div>\n              <span className=\"text-white text-xs font-bold\">{t('post.share')}</span>\n            </button>\n\n            {/* Save Button */}\n            <button className=\"flex flex-col items-center space-y-1\">\n              <div className=\"text-3xl text-white\">🔖</div>\n              <span className=\"text-white text-xs font-bold\">{t('post.save')}</span>\n            </button>\n\n            {/* More Options */}\n            <button className=\"text-white text-2xl\">⋯</button>\n          </div>\n        </div>\n      </div>\n\n      {/* Comments Modal */}\n      {showComments && (\n        <div className=\"absolute inset-0 bg-black bg-opacity-90 z-50 flex flex-col\">\n          <div className=\"flex items-center justify-between p-4 border-b border-gray-700\">\n            <h3 className=\"text-white font-bold\">{t('post.viewComments')}</h3>\n            <button \n              onClick={() => setShowComments(false)}\n              className=\"text-white text-2xl\"\n            >\n              ✕\n            </button>\n          </div>\n          \n          <div className=\"flex-1 overflow-y-auto p-4\">\n            {/* Sample Comments */}\n            {[1, 2, 3, 4, 5].map(i => (\n              <div key={i} className=\"flex items-start space-x-3 mb-4\">\n                <div className=\"w-8 h-8 bg-gray-600 rounded-full flex items-center justify-center\">\n                  <span className=\"text-white text-sm\">U{i}</span>\n                </div>\n                <div className=\"flex-1\">\n                  <p className=\"text-white text-sm\">\n                    <span className=\"font-bold\">user{i}</span>\n                    {' '}Amazing video! Keep it up! 🔥🔥\n                  </p>\n                  <div className=\"flex items-center space-x-4 mt-1\">\n                    <span className=\"text-gray-400 text-xs\">2h</span>\n                    <button className=\"text-gray-400 text-xs\">{t('post.like')}</button>\n                    <button className=\"text-gray-400 text-xs\">Reply</button>\n                  </div>\n                </div>\n                <button className=\"text-gray-400 text-sm\">🤍</button>\n              </div>\n            ))}\n          </div>\n\n          {/* Comment Input */}\n          <div className=\"p-4 border-t border-gray-700\">\n            <div className=\"flex items-center space-x-3\">\n              <div className=\"w-8 h-8 bg-gray-600 rounded-full flex items-center justify-center\">\n                <span className=\"text-white text-sm\">Y</span>\n              </div>\n              <input\n                type=\"text\"\n                placeholder={t('post.addComment')}\n                className=\"flex-1 bg-gray-800 text-white px-4 py-2 rounded-full placeholder-gray-400 focus:outline-none\"\n              />\n              <button className=\"text-blue-400 font-bold\">Post</button>\n            </div>\n          </div>\n        </div>\n      )}\n    </div>\n  );\n}'''\n\nwith open(\"frontend/src/components/ReelCard.jsx\", \"w\") as f:\n    f.write(reel_card_component)\n\nprint(\"✅ ReelCard component created with all Instagram-like features!\")\n\n# Create Upload page for video uploading\nupload_page = '''import React, { useState, useRef } from 'react';\nimport { useNavigate } from 'react-router-dom';\nimport { useTranslation } from '../i18n';\n\nexport default function Upload() {\n  const [selectedFile, setSelectedFile] = useState(null);\n  const [preview, setPreview] = useState(null);\n  const [caption, setCaption] = useState('');\n  const [language, setLanguage] = useState('bho');\n  const [hashtags, setHashtags] = useState('');\n  const [duration, setDuration] = useState(0);\n  const [uploading, setUploading] = useState(false);\n  const [uploadProgress, setUploadProgress] = useState(0);\n  \n  const fileInputRef = useRef(null);\n  const videoRef = useRef(null);\n  const { t } = useTranslation();\n  const navigate = useNavigate();\n\n  const handleFileSelect = (event) => {\n    const file = event.target.files[0];\n    if (!file) return;\n\n    // Validate file type\n    if (!file.type.startsWith('video/')) {\n      alert('Please select a video file!');\n      return;\n    }\n\n    // Validate file size (50MB max)\n    if (file.size > 50 * 1024 * 1024) {\n      alert('File size must be less than 50MB!');\n      return;\n    }\n\n    setSelectedFile(file);\n    \n    // Create preview\n    const url = URL.createObjectURL(file);\n    setPreview(url);\n  };\n\n  const handleVideoDurationCheck = () => {\n    if (videoRef.current) {\n      const duration = videoRef.current.duration;\n      setDuration(duration);\n      \n      // Validate duration (1 second to 10 minutes)\n      if (duration < 1 || duration > 600) {\n        alert('Video duration must be between 1 second and 10 minutes!');\n        setSelectedFile(null);\n        setPreview(null);\n        return;\n      }\n    }\n  };\n\n  const handleUpload = async () => {\n    if (!selectedFile) {\n      alert('Please select a video!');\n      return;\n    }\n\n    if (duration < 1 || duration > 600) {\n      alert('Invalid video duration!');\n      return;\n    }\n\n    setUploading(true);\n    \n    // Simulate upload progress\n    for (let i = 0; i <= 100; i += 10) {\n      ▌
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>dkd - Short Video Sharing</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-bg: #000;
+            --text-color: #fff;
+            --accent-color: #0095f6;
+            --verified-color: #0095f6;
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            background-color: var(--primary-bg);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            color: var(--text-color);
+            overflow: hidden;
+        }
+
+        /* --- Header --- */
+        .header {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            padding: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 100;
+            background: linear-gradient(to bottom, rgba(0,0,0,0.7), transparent);
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            letter-spacing: 1px;
+        }
+
+        .header-icons i {
+            font-size: 20px;
+            margin-left: 20px;
+            cursor: pointer;
+        }
+
+        /* --- Reel Container --- */
+        .reels-container {
+            width: 100%;
+            height: 100vh;
+            overflow-y: scroll;
+            scroll-snap-type: y mandatory;
+            scrollbar-width: none; /* Hide scrollbar Firefox */
+        }
+
+        .reels-container::-webkit-scrollbar { display: none; } /* Hide scrollbar Chrome */
+
+        .reel {
+            width: 100%;
+            height: 100vh;
+            scroll-snap-align: start;
+            position: relative;
+            background: #111;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        /* --- Overlay UI --- */
+        .video-sidebar {
+            position: absolute;
+            right: 15px;
+            bottom: 100px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .action-btn {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            cursor: pointer;
+        }
+
+        .action-btn i { font-size: 28px; margin-bottom: 5px; }
+        .action-btn span { font-size: 12px; }
+
+        .liked { color: #ff3040; }
+
+        .video-data {
+            position: absolute;
+            bottom: 30px;
+            left: 15px;
+            width: 70%;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .user-info b { font-size: 16px; }
+        .verified-badge { color: var(--verified-color); font-size: 14px; }
+
+        .follow-btn {
+            border: 1px solid #fff;
+            padding: 4px 12px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        /* --- Settings & Upload Modal --- */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #262626;
+            padding: 20px;
+            border-radius: 12px;
+            z-index: 1000;
+            width: 80%;
+            max-width: 400px;
+        }
+
+        .modal h3 { margin-top: 0; }
+        .modal select, .modal input {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            background: #333;
+            color: white;
+            border: none;
+            border-radius: 5px;
+        }
+
+        .close-modal {
+            float: right;
+            cursor: pointer;
+        }
+
+        .overlay-bg {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            z-index: 999;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="logo">dkd</div>
+        <div class="header-icons">
+            <i class="fas fa-plus-square" onclick="toggleModal('uploadModal')"></i>
+            <i class="fas fa-cog" onclick="toggleModal('settingsModal')"></i>
+            <i class="fas fa-user-circle" onclick="loginPrompt()"></i>
+        </div>
+    </div>
+
+    <div class="reels-container" id="reels-feed">
+        </div>
+
+    <div class="overlay-bg" id="overlay" onclick="closeAllModals()"></div>
+
+    <div class="modal" id="settingsModal">
+        <span class="close-modal" onclick="closeAllModals()">&times;</span>
+        <h3>Settings</h3>
+        <label>Select Language:</label>
+        <select onchange="changeLanguage(this.value)">
+            <option value="en">English</option>
+            <option value="hi">Hindi (हिन्दी)</option>
+            <option value="bh">Bhojpuri (भोजपुरी)</option>
+        </select>
+    </div>
+
+    <div class="modal" id="uploadModal">
+        <span class="close-modal" onclick="closeAllModals()">&times;</span>
+        <h3>Upload Video (1s - 10m)</h3>
+        <input type="file" accept="video/*">
+        <button style="width:100%; padding:10px; background:var(--accent-color); border:none; color:white; border-radius:5px;">Upload to dkd</button>
+    </div>
+
+    <script>
+        // Language Dictionary
+        const langData = {
+            en: { follow: "Follow", share: "Share", comment: "Comment" },
+            hi: { follow: "फॉलो करें", share: "शेयर", comment: "टिप्पणी" },
+            bh: { follow: "फॉलो करीं", share: "भेजीं", comment: "बताईं" }
+        };
+
+        let currentLang = 'en';
+
+        // Generate 200 Reels (Placeholder Logic)
+        const container = document.getElementById('reels-feed');
+        for (let i = 1; i <= 200; i++) {
+            const reel = document.createElement('div');
+            reel.className = 'reel';
+            reel.innerHTML = `
+                <video loop onclick="this.paused ? this.play() : this.pause()">
+                    <source src="https://www.w3schools.com/html/mov_bbb.mp4" type="video/mp4">
+                </video>
+                <div class="video-sidebar">
+                    <div class="action-btn" onclick="toggleLike(this)">
+                        <i class="fas fa-heart"></i>
+                        <span>${Math.floor(Math.random() * 5000)}</span>
+                    </div>
+                    <div class="action-btn">
+                        <i class="fas fa-comment"></i>
+                        <span class="lang-comment">Comment</span>
+                    </div>
+                    <div class="action-btn">
+                        <i class="fas fa-share"></i>
+                        <span class="lang-share">Share</span>
+                    </div>
+                </div>
+                <div class="video-data">
+                    <div class="user-info">
+                        <b>dkd_official</b>
+                        <i class="fas fa-check-circle verified-badge"></i>
+                        <div class="follow-btn lang-follow">Follow</div>
+                    </div>
+                    <p>Bhojpuri Reel #${i} - Enjoy high quality content on dkd!</p>
+                </div>
+            `;
+            container.appendChild(reel);
+        }
+
+        // Logic Functions
+        function toggleLike(element) {
+            const icon = element.querySelector('i');
+            const span = element.querySelector('span');
+            let count = parseInt(span.innerText);
+            
+            if (icon.classList.toggle('liked')) {
+                span.innerText = count + 1;
+            } else {
+                span.innerText = count - 1;
+            }
+        }
+
+        function toggleModal(id) {
+            document.getElementById('overlay').style.display = 'block';
+            document.getElementById(id).style.display = 'block';
+        }
+
+        function closeAllModals() {
+            document.getElementById('overlay').style.display = 'none';
+            document.querySelectorAll('.modal').forEach(m => m.style.display = 'none');
+        }
+
+        function loginPrompt() {
+            let user = prompt("Enter username to login to dkd:");
+            if(user) alert("Welcome to dkd, " + user + "!");
+        }
+
+        function changeLanguage(lang) {
+            currentLang = lang;
+            document.querySelectorAll('.lang-follow').forEach(el => el.innerText = langData[lang].follow);
+            document.querySelectorAll('.lang-share').forEach(el => el.innerText = langData[lang].share);
+            document.querySelectorAll('.lang-comment').forEach(el => el.innerText = langData[lang].comment);
+            closeAllModals();
+        }
+
+        // Auto-play video on scroll (Intersection Observer)
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                const video = entry.target.querySelector('video');
+                if (entry.isIntersecting) {
+                    video.play();
+                } else {
+                    video.pause();
+                    video.currentTime = 0;
+                }
+            });
+        }, { threshold: 0.8 });
+
+        document.querySelectorAll('.reel').forEach(reel => observer.observe(reel));
+    </script>
+</body>
+</html>
